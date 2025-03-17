@@ -1,0 +1,30 @@
+# Зависимости
+node_modules/
+/.pnp
+.pnp.js
+
+# Сборка
+/dist
+/build
+
+# Логи
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Локальные файлы
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Редакторы
+.idea/
+.vscode/
+*.swp
+*.swo
+.cursor/
+
+# Кэш
+.cache/ 
