@@ -84,72 +84,13 @@ export class UI {
     this.setupEventListeners();
     
     // Показываем стартовый экран
-    this.showStartScreen();
-    
+   // this.showStartScreen();
+
     // Обновляем счетчики
-    this.updateCounters();
+  //  this.updateCounters();
   }
 
   setupEventListeners() {
-    // Обработчики для кнопок управления
-    this.upButton.addEventListener('click', () => this.handleMove('down'));
-    this.leftButton.addEventListener('click', () => this.handleMove('left'));
-    this.rightButton.addEventListener('click', () => this.handleMove('right'));
-    this.downButton.addEventListener('click', () => this.handleMove('up'));
-    
-    // Обработчики для клавиатуры
-    document.addEventListener('keydown', (event) => {
-      if (this.game.isActive()) {
-        switch (event.key.toLowerCase()) {
-          case 'arrowup':
-          case 'w':
-            this.handleMove('down');
-            break;
-          case 'arrowdown':
-          case 's':
-            this.handleMove('up');
-            break;
-          case 'arrowleft':
-          case 'a':
-            this.handleMove('left');
-            break;
-          case 'arrowright':
-          case 'd':
-            this.handleMove('right');
-            break;
-          case 'q':
-            this.handleCameraRotation('left');
-            break;
-          case 'e':
-            this.handleCameraRotation('right');
-            break;
-          case 'D': // Shift+D для переключения режима отладки
-            if (event.shiftKey) {
-              this.game.toggleDebugHelpers();
-            }
-            break;
-          case 'r':
-            this.game.increaseCameraHeight();
-            break;
-          case 'f':
-            this.game.decreaseCameraHeight();
-            break;
-        }
-      }
-    });
-    
-    // Обработчики для кнопок старта/рестарта
-    this.startButton.addEventListener('click', () => {
-      this.hideStartScreen();
-      this.game.start();
-    });
-    
-    this.restartButton.addEventListener('click', () => {
-      this.hideEndScreen();
-      this.reset();
-      this.game.start();
-    });
-    
     // Обработчики для кнопок управления камерой
     document.getElementById('rotateLeft').addEventListener('click', () => {
       this.game.rotateCameraLeft();

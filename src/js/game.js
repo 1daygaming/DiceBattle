@@ -271,6 +271,8 @@ export class Game {
     
     // Добавляем рендерер на страницу
     const container = document.getElementById('game-canvas');
+
+    console.log('container', container)
     container.appendChild(this.renderer.domElement);
   }
 

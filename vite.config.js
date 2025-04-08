@@ -1,7 +1,10 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
+import vue from '@vitejs/plugin-vue';
+import { fileURLToPath, URL } from 'node:url';
 
 export default defineConfig({
+  plugins: [vue()],
   base: '/stacker/',
   root: './',
   publicDir: 'public',
@@ -12,7 +15,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': resolve(__dirname, './src'),
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
   server: {
