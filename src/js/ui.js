@@ -1,21 +1,13 @@
 export class UI {
   constructor(game) {
     this.game = game;
-    this.movesCounter = 0;
-    this.collectedNumbers = 0;
-    this.totalTargetNumbers = 6;
-    
+
     // Элементы UI
-    this.movesCounterElement = document.getElementById('moves-counter');
-    this.collectedNumbersElement = document.getElementById('collected-numbers');
     this.nextNumberElement = document.getElementById('next-number');
     this.gameStartScreen = document.getElementById('game-start');
     this.gameEndScreen = document.getElementById('game-end');
     this.totalMovesElement = document.getElementById('total-moves');
     
-    // Кнопки
-    this.startButton = document.getElementById('start-btn');
-    this.restartButton = document.getElementById('restart-btn');
     this.upButton = document.getElementById('up-btn');
     this.leftButton = document.getElementById('left-btn');
     this.rightButton = document.getElementById('right-btn');
@@ -110,47 +102,7 @@ export class UI {
     });
   }
 
-  handleMove(direction) {
-    // Если игра не активна, игнорируем нажатия
-    if (!this.game.isActive()) return;
-    
-    // Если кубик уже вращается, игнорируем нажатия
-    if (this.game.isCubeRotating()) return;
-    
-    // Пытаемся сделать ход
-    const moved = this.game.moveCube(direction);
-    
-    // Если ход успешен, увеличиваем счетчик ходов
-    if (moved) {
-      this.movesCounter++;
-      this.updateCounters();
-    }
-  }
-
-  handleCameraRotation(direction) {
-    if (direction === 'left') {
-      this.game.rotateCameraLeft();
-    } else if (direction === 'right') {
-      this.game.rotateCameraRight();
-    }
-  }
-
   updateCounters() {
-    // Обновляем счетчик ходов
-    this.movesCounterElement.textContent = `Ходы: ${this.movesCounter}`;
-    
-    // Обновляем счетчик собранных цифр
-    this.collectedNumbersElement.textContent = `Собрано: ${this.collectedNumbers}/${this.totalTargetNumbers}`;
-    
-    // Обновляем информацию о следующей цифре
-    const nextNumber = this.collectedNumbers + 1;
-    if (nextNumber <= this.totalTargetNumbers) {
-      this.nextNumberElement.textContent = `Следующая цель: ${nextNumber}`;
-      this.nextNumberElement.style.display = 'block';
-    } else {
-      this.nextNumberElement.style.display = 'none';
-    }
-    
     // Обновляем информацию о смене препятствий
     if (this.game.isActive()) {
       const movesLeft = this.game.nextObstacleChange - this.game.moveCount;
@@ -162,13 +114,11 @@ export class UI {
   }
 
   updateCollectedNumbers(count) {
-    this.collectedNumbers = count;
     this.updateCounters();
     
     // Если собраны все цифры, показываем экран победы
-    if (this.collectedNumbers === this.totalTargetNumbers) {
-      this.showEndScreen();
-    }
+    //this.collectedNumbers === this.totalTargetNumbers
+    //  this.showEndScreen();
   }
 
   showStartScreen() {
@@ -193,7 +143,7 @@ export class UI {
   }
 
   showEndScreen() {
-    this.totalMovesElement.textContent = this.movesCounter;
+    this.totalMovesElement.textContent = 0 //this.movesCounter  ;
     this.gameEndScreen.classList.remove('hidden');
     
     // Скрываем индикатор следующей цифры на экране победы
@@ -210,8 +160,6 @@ export class UI {
   }
 
   reset() {
-    this.movesCounter = 0;
-    this.collectedNumbers = 0;
     this.updateCounters();
   }
 

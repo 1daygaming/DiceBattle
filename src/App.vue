@@ -58,7 +58,8 @@ export default {
 
       // Устанавливаем обработчик изменения количества собранных цифр
       game.setCollectedNumbersChangedHandler((count) => {
-        ui.updateCollectedNumbers(count);
+        collectedNumbers.value = count;
+        nextNumber.value = count + 1;
       });
 
       // Устанавливаем обработчик завершения игры
