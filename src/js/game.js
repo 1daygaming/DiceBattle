@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Board } from './board';
-import { Cube } from './cube.js';
+import { Cube } from './cube';
 
 export class Game {
   constructor(boardSize, cellSize) {

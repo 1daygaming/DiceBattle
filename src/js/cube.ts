@@ -1,6 +1,41 @@
 import * as THREE from 'three';
 
+interface FaceValues {
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+  front: number;
+  back: number;
+}
+
+interface Position {
+  x: number;
+  y: number;
+}
+
+interface BoardSize {
+  width: number;
+  height: number;
+}
+
 export class Cube {
+  size: number;
+  mesh: THREE.Mesh | null;
+  position: Position;
+  faceValues: FaceValues;
+  rotationInProgress: boolean;
+  rotationAxis: THREE.Vector3 | null;
+  rotationAngle: number;
+  targetRotation: number;
+  rotationDirection: number;
+  rotationSpeed: number;
+  scene: THREE.Scene | null;
+  pivot: THREE.Object3D | null;
+  faceMaterials: Record<number, THREE.MeshStandardMaterial>;
+  orientationHelpers?: THREE.Group;
+  teleporting?: boolean;
+
   constructor(size = 1) {
     this.size = size;
     this.mesh = null;
@@ -31,7 +66,7 @@ export class Cube {
     this.createMesh();
   }
 
-  createMesh() {
+  createMesh(): void {
     // Создаем геометрию куба
     const geometry = new THREE.BoxGeometry(this.size, this.size, this.size);
     
@@ -59,12 +94,16 @@ export class Cube {
     //this.addOrientationHelpers();
   }
 
-  createFaceMaterial(value) {
+  createFaceMaterial(value: number): THREE.MeshStandardMaterial {
     // Создаем канвас для отрисовки текстуры
     const canvas = document.createElement('canvas');
     canvas.width = 128;
     canvas.height = 128;
     const context = canvas.getContext('2d');
+    
+    if (!context) {
+      throw new Error('Could not get 2D context from canvas');
+    }
     
     // Заливаем фон
     context.fillStyle = '#ffffff';
@@ -138,14 +177,14 @@ export class Cube {
   }
   
   // Вспомогательный метод для рисования точки
-  drawDot(context, x, y, size) {
+  drawDot(context: CanvasRenderingContext2D, x: number, y: number, size: number): void {
     context.beginPath();
     context.arc(x, y, size, 0, Math.PI * 2);
     context.fill();
   }
 
   // Обновляем значения граней после вращения
-  updateFaceValues(direction) {
+  updateFaceValues(direction: string): void {
     const { top, bottom, left, right, front, back } = this.faceValues;
     
     switch (direction) {
@@ -196,7 +235,7 @@ export class Cube {
   }
   
   // Начать вращение куба в указанном направлении
-  startRotation(direction, boardSize, cellSize, board) {
+  startRotation(direction: string, boardSize: BoardSize, cellSize: number, board: any): boolean {
     if (this.rotationInProgress) return false;
     
     // Выводим текущие значения граней для отладки
@@ -243,6 +282,10 @@ export class Cube {
     this.rotationDirection = 1;
     this.rotationAngle = 0;
     this.targetRotation = Math.PI / 2;
+    
+    if (!this.scene || !this.mesh) {
+      return false;
+    }
     
     // Получаем текущую позицию в мировых координатах
     const worldX = this.position.x * this.size - (boardSize.width * cellSize) / 2 + cellSize / 2;
@@ -329,7 +372,7 @@ export class Cube {
   }
 
   // Обновление вращения куба
-  update(boardSize, cellSize) {
+  update(boardSize: BoardSize, cellSize: number): boolean | undefined {
     if (!this.rotationInProgress) return;
     
     // Продолжаем вращение
@@ -341,13 +384,19 @@ export class Cube {
       this.rotationInProgress = false;
       
       // Определяем направление вращения
-      let direction;
-      if (this.rotationAxis.x === 1) {
-        if (this.pivot.rotation.x > 0) direction = 'up';
-        else direction = 'down';
-      } else if (this.rotationAxis.z === 1) {
-        if (this.pivot.rotation.z > 0) direction = 'left';
-        else direction = 'right';
+      let direction: string | undefined;
+      if (this.rotationAxis && this.pivot) {
+        if (this.rotationAxis.x === 1) {
+          if (this.pivot.rotation.x > 0) direction = 'up';
+          else direction = 'down';
+        } else if (this.rotationAxis.z === 1) {
+          if (this.pivot.rotation.z > 0) direction = 'left';
+          else direction = 'right';
+        }
+      }
+      
+      if (!direction) {
+        return false;
       }
       
       // Обновляем логические значения граней (для игровой логики), но не меняем материалы
@@ -370,7 +419,7 @@ export class Cube {
       }
       
       // Возвращаем куб на сцену (удаляем из точки вращения)
-      if (this.pivot) {
+      if (this.pivot && this.mesh && this.scene) {
         // Сохраняем мировую позицию и поворот куба
         const worldPosition = new THREE.Vector3();
         const worldQuaternion = new THREE.Quaternion();
@@ -393,39 +442,43 @@ export class Cube {
       }
       
       // Сбрасываем позицию меша с учетом центрирования поля
-      const worldX = this.position.x * this.size - (boardSize.width * cellSize) / 2 + cellSize / 2;
-      const worldZ = this.position.y * this.size - (boardSize.height * cellSize) / 2 + cellSize / 2;
-      
-      this.mesh.position.set(
-        worldX,
-        this.size / 2,
-        worldZ
-      );
+      if (this.mesh) {
+        const worldX = this.position.x * this.size - (boardSize.width * cellSize) / 2 + cellSize / 2;
+        const worldZ = this.position.y * this.size - (boardSize.height * cellSize) / 2 + cellSize / 2;
+        
+        this.mesh.position.set(
+          worldX,
+          this.size / 2,
+          worldZ
+        );
+      }
       
       return true; // вращение завершено
     }
     
     // Применяем вращение к точке вращения
-    if (this.pivot) {
-      switch (true) {
-        case this.rotationAxis.x === 1:
-          if (this.mesh.position.z < 0) {
-            // Вращение вверх
-            this.pivot.rotation.x = this.rotationAngle;
-          } else {
-            // Вращение вниз
-            this.pivot.rotation.x = -this.rotationAngle;
-          }
-          break;
-        case this.rotationAxis.z === 1:
-          if (this.mesh.position.x > 0) {
-            // Вращение влево
-            this.pivot.rotation.z = this.rotationAngle;
-          } else {
-            // Вращение вправо
-            this.pivot.rotation.z = -this.rotationAngle;
-          }
-          break;
+    if (this.pivot && this.mesh) {
+      if (this.rotationAxis) {
+        switch (true) {
+          case this.rotationAxis.x === 1:
+            if (this.mesh.position.z < 0) {
+              // Вращение вверх
+              this.pivot.rotation.x = this.rotationAngle;
+            } else {
+              // Вращение вниз
+              this.pivot.rotation.x = -this.rotationAngle;
+            }
+            break;
+          case this.rotationAxis.z === 1:
+            if (this.mesh.position.x > 0) {
+              // Вращение влево
+              this.pivot.rotation.z = this.rotationAngle;
+            } else {
+              // Вращение вправо
+              this.pivot.rotation.z = -this.rotationAngle;
+            }
+            break;
+        }
       }
     }
     
@@ -433,17 +486,17 @@ export class Cube {
   }
 
   // Получаем значение нижней грани кубика
-  getBottomValue() {
+  getBottomValue(): number {
     return this.faceValues.bottom;
   }
   
   // Получаем значение верхней грани кубика
-  getTopValue() {
+  getTopValue(): number {
     return this.faceValues.top;
   }
 
   // Сбросить куб в начальное положение
-  reset(startPosition) {
+  reset(startPosition: Position): Position {
     this.position = { ...startPosition };
     this.rotationInProgress = false;
     this.faceValues = {
@@ -456,7 +509,7 @@ export class Cube {
     };
     
     // Создаем новый меш с исходными материалами
-    if (this.mesh) {
+    if (this.mesh && this.scene) {
       // Если куб находится в точке вращения, удаляем его оттуда
       if (this.pivot) {
         this.pivot.remove(this.mesh);
@@ -471,7 +524,7 @@ export class Cube {
       this.createMesh();
       
       // Добавляем его на сцену
-      if (this.scene) {
+      if (this.mesh) {
         this.scene.add(this.mesh);
       }
     }
@@ -480,7 +533,9 @@ export class Cube {
   }
 
   // Добавляем вспомогательные стрелки для визуализации ориентации куба
-  addOrientationHelpers() {
+  addOrientationHelpers(): void {
+    if (!this.mesh) return;
+    
     // Создаем группу для вспомогательных объектов
     this.orientationHelpers = new THREE.Group();
     this.mesh.add(this.orientationHelpers);
@@ -514,12 +569,12 @@ export class Cube {
   }
 
   // Устанавливаем ссылку на сцену
-  setScene(scene) {
+  setScene(scene: THREE.Scene): void {
     this.scene = scene;
   }
 
   // Метод для изменения цвета кубика
-  setColor(color) {
+  setColor(color: number): void {
     // Создаем новые материалы для каждого значения с указанным цветом
     for (let i = 1; i <= 6; i++) {
       // Создаем канвас для отрисовки текстуры
@@ -527,6 +582,10 @@ export class Cube {
       canvas.width = 128;
       canvas.height = 128;
       const context = canvas.getContext('2d');
+      
+      if (!context) {
+        throw new Error('Could not get 2D context from canvas');
+      }
       
       // Заливаем фон цветом
       context.fillStyle = '#' + color.toString(16).padStart(6, '0');
@@ -607,7 +666,7 @@ export class Cube {
   }
 
   // Проверяет, может ли кубик двигаться в указанном направлении без фактического перемещения
-  canRotate(direction, boardSize, cellSize, board) {
+  canRotate(direction: string, boardSize: BoardSize, cellSize: number, board: any): boolean {
     // Проверяем, можно ли двигаться в указанном направлении
     const newPosition = { ...this.position };
     
@@ -643,4 +702,4 @@ export class Cube {
     
     return true;
   }
-}
+} 
