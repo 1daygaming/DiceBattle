@@ -1,5 +1,26 @@
+import { Game } from "@/types/game";
+
 export class UI {
-  constructor(game) {
+  game: Game;
+  movesCounter: number = 0;
+  collectedNumbers: number = 0;
+  totalTargetNumbers: number = 6;
+  movesCounterElement: HTMLElement | null = null;
+  collectedNumbersElement: HTMLElement | null = null;
+  nextNumberElement: HTMLElement | null = null;
+  gameStartScreen: HTMLElement | null = null;
+  gameEndScreen: HTMLElement | null = null;
+  totalMovesElement: HTMLElement | null = null;
+  startButton: HTMLElement | null = null;
+  restartButton: HTMLElement | null = null;
+  upButton: HTMLElement | null = null;
+  leftButton: HTMLElement | null = null;
+  rightButton: HTMLElement | null = null;
+  downButton: HTMLElement | null = null;
+  obstacleInfoElement!: HTMLElement;
+  notificationElement!: HTMLElement;
+
+  constructor(game: Game) {
     this.game = game;
 
     // Элементы UI
@@ -84,22 +105,34 @@ export class UI {
 
   setupEventListeners() {
     // Обработчики для кнопок управления камерой
-    document.getElementById('rotateLeft').addEventListener('click', () => {
-      this.game.rotateCameraLeft();
-    });
+    const rotateLeftButton = document.getElementById('rotateLeft');
+    if (rotateLeftButton) {
+      rotateLeftButton.addEventListener('click', () => {
+        this.game.rotateCameraLeft();
+      });
+    }
     
-    document.getElementById('rotateRight').addEventListener('click', () => {
-      this.game.rotateCameraRight();
-    });
+    const rotateRightButton = document.getElementById('rotateRight');
+    if (rotateRightButton) {
+      rotateRightButton.addEventListener('click', () => {
+        this.game.rotateCameraRight();
+      });
+    }
     
     // Обработчики для кнопок изменения высоты камеры
-    document.getElementById('cameraUp').addEventListener('click', () => {
-      this.game.increaseCameraHeight();
-    });
+    const cameraUpButton = document.getElementById('cameraUp');
+    if (cameraUpButton) {
+      cameraUpButton.addEventListener('click', () => {
+        this.game.increaseCameraHeight();
+      });
+    }
     
-    document.getElementById('cameraDown').addEventListener('click', () => {
-      this.game.decreaseCameraHeight();
-    });
+    const cameraDownButton = document.getElementById('cameraDown');
+    if (cameraDownButton) {
+      cameraDownButton.addEventListener('click', () => {
+        this.game.decreaseCameraHeight();
+      });
+    }
   }
 
   updateCounters() {
@@ -113,7 +146,7 @@ export class UI {
     }
   }
 
-  updateCollectedNumbers(count) {
+  updateCollectedNumbers(count: number) {
     this.updateCounters();
     
     // Если собраны все цифры, показываем экран победы
@@ -123,8 +156,10 @@ export class UI {
 
   showStartScreen() {
     // Показываем стартовый экран без правил
-    this.gameStartScreen.classList.remove('hidden');
-    this.gameEndScreen.classList.add('hidden');
+    if (this.gameStartScreen && this.gameEndScreen) {
+      this.gameStartScreen.classList.remove('hidden');
+      this.gameEndScreen.classList.add('hidden');
+    }
     
     // Скрываем индикатор следующей цифры на стартовом экране
     if (this.nextNumberElement) {
@@ -136,15 +171,19 @@ export class UI {
   }
 
   hideStartScreen() {
-    this.gameStartScreen.classList.add('hidden');
+    if (this.gameStartScreen) {
+      this.gameStartScreen.classList.add('hidden');
+    }
     
     // Показываем индикатор следующей цифры при начале игры
     this.updateCounters();
   }
 
   showEndScreen() {
-    this.totalMovesElement.textContent = 0 //this.movesCounter  ;
-    this.gameEndScreen.classList.remove('hidden');
+    if (this.totalMovesElement && this.gameEndScreen) {
+      this.totalMovesElement.textContent = '0'; //this.movesCounter.toString();
+      this.gameEndScreen.classList.remove('hidden');
+    }
     
     // Скрываем индикатор следующей цифры на экране победы
     if (this.nextNumberElement) {
@@ -156,7 +195,9 @@ export class UI {
   }
 
   hideEndScreen() {
-    this.gameEndScreen.classList.add('hidden');
+    if (this.gameEndScreen) {
+      this.gameEndScreen.classList.add('hidden');
+    }
   }
 
   reset() {
@@ -164,7 +205,7 @@ export class UI {
   }
 
   // Показываем уведомление
-  showNotification(message, duration = 2000) {
+  showNotification(message: string, duration = 2000) {
     this.notificationElement.textContent = message;
     this.notificationElement.classList.remove('hiding');
     this.notificationElement.style.display = 'block';

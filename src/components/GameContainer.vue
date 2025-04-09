@@ -37,10 +37,16 @@
   </div>
 </template>
 
-<script>
-import { onMounted, onUnmounted, ref } from 'vue'
+<script lang="ts">
+import { onMounted, onUnmounted, ref, defineComponent } from 'vue'
 
-export default {
+interface NotificationState {
+  show: boolean;
+  message: string;
+  hiding: boolean;
+}
+
+export default defineComponent({
   name: 'GameContainer',
   props: {
     moves: {
@@ -66,13 +72,13 @@ export default {
   },
   emits: ['move', 'camera-rotate', 'camera-height', 'debug-toggle'],
   setup(props, { emit }) {
-    const notification = ref({
+    const notification = ref<NotificationState>({
       show: false,
       message: '',
       hiding: false
     })
 
-    const showNotification = (message, duration = 2000) => {
+    const showNotification = (message: string, duration: number = 2000): void => {
       notification.value = {
         show: true,
         message,
@@ -88,7 +94,7 @@ export default {
       }, duration)
     }
 
-    const handleKeyDown = (event) => {
+    const handleKeyDown = (event: KeyboardEvent): void => {
       if (event.key.toLowerCase() === 'd' && event.shiftKey) {
         emit('debug-toggle')
         return
@@ -139,7 +145,7 @@ export default {
       showNotification
     }
   }
-}
+})
 </script>
 
 <style scoped>

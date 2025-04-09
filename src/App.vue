@@ -18,32 +18,33 @@
 </template>
 
 <script lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, defineComponent } from 'vue'
 import GameContainer from './components/GameContainer.vue'
 import { Game } from './js/game'
-import { UI } from "./js/ui.js";
+import { UI } from "./js/ui";
+import type { Game as GameType } from './types/game'
 
-export default {
+export default defineComponent({
   name: 'App',
   components: {
     GameContainer
   },
   setup() {
-    const gameStarted = ref(false)
-    const gameEnded = ref(false)
-    const movesCounter = ref(0)
-    const collectedNumbers = ref(0)
-    const totalTargetNumbers = ref(6)
-    const nextNumber = ref(1)
-    const obstacleInfo = ref(null)
-    const moveQueue = ref([])
-    const processingMove = ref(false)
-    let game = null
+    const gameStarted = ref<boolean>(false)
+    const gameEnded = ref<boolean>(false)
+    const movesCounter = ref<number>(0)
+    const collectedNumbers = ref<number>(0)
+    const totalTargetNumbers = ref<number>(6)
+    const nextNumber = ref<number>(1)
+    const obstacleInfo = ref<number | null>(null)
+    const moveQueue = ref<string[]>([])
+    let game: Game | null = null
+
 
     onMounted(() => {
       if (game) return
       console.log('call mount')
-      game = new Game();
+      game = new Game() as GameType;
 
       // Создаем экземпляр UI
       const ui = new UI(game);
@@ -52,23 +53,25 @@ export default {
       game.setUI(ui);
 
       // Устанавливаем обработчик изменения количества собранных цифр
-      game.setCollectedNumbersChangedHandler((count) => {
+      game.setCollectedNumbersChangedHandler((count: number) => {
         collectedNumbers.value = count;
         nextNumber.value = count + 1;
       });
 
       // Устанавливаем обработчик завершения игры
       game.setGameCompletedHandler(() => {
-        ui.showEndScreen();
+        gameEnded.value = true;
       });
 
       // Устанавливаем обработчик для проверки очереди ходов
       game.setRotationCompletedHandler(() => {
         if (moveQueue.value.length > 0) {
           const nextDirection = moveQueue.value.shift()
-          const moved = game.moveCube(nextDirection)
-          if (moved) {
-            movesCounter.value++
+          if (nextDirection && game) {
+            const moved = game.moveCube(nextDirection)
+            if (moved) {
+              movesCounter.value++
+            }
           }
         }
       });
@@ -76,30 +79,31 @@ export default {
       // Инициализируем игру
       game.init();
 
-      // Инициализируем UI
-      ui.init();
-
       // Запускаем игровой цикл
       game.animate();
     })
 
-    const startGame = () => {
+    const startGame = (): void => {
       gameStarted.value = true
-      game.start()
+      if (game) {
+        game.start()
+      }
     }
 
-    const restartGame = () => {
+    const restartGame = (): void => {
       gameEnded.value = false
       movesCounter.value = 0
       collectedNumbers.value = 0
       nextNumber.value = 1
       moveQueue.value = []
-      game.reset()
-      game.start()
+      if (game) {
+        game.reset()
+        game.start()
+      }
     }
 
-    const handleMove = (direction) => {
-      if (game.isActive()) {
+    const handleMove = (direction: string): void => {
+      if (game && game.isActive()) {
         if (game.isCubeRotating()) {
           // If cube is rotating or teleporting, add move to queue
           moveQueue.value.push(direction)
@@ -113,7 +117,9 @@ export default {
       }
     }
 
-    const handleCameraRotation = (direction) => {
+    const handleCameraRotation = (direction: string): void => {
+      if (!game) return;
+
       if (direction === 'left') {
         game.rotateCameraLeft()
       } else if (direction === 'right') {
@@ -121,7 +127,9 @@ export default {
       }
     }
 
-    const handleCameraHeight = (direction) => {
+    const handleCameraHeight = (direction: string): void => {
+      if (!game) return;
+
       if (direction === 'up') {
         game.increaseCameraHeight()
       } else if (direction === 'down') {
@@ -129,8 +137,10 @@ export default {
       }
     }
 
-    const toggleDebugHelpers = () => {
-      game.toggleDebugHelpers()
+    const toggleDebugHelpers = (): void => {
+      if (game) {
+        game.toggleDebugHelpers()
+      }
     }
 
     return {
@@ -150,7 +160,7 @@ export default {
       toggleDebugHelpers
     }
   }
-}
+})
 </script>
 
 <style>
