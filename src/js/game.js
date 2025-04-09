@@ -7,74 +7,77 @@ export class Game {
     // Настройки игры
     this.boardSize = boardSize || { width: 10, height: 10 };
     this.cellSize = cellSize || 1;
-    
+
     // Состояние игры
     this.active = false;
     this.collectedNumbers = new Set();
     this.moveCount = 0; // Счетчик ходов
     this.nextObstacleChange = this.getRandomObstacleChangeInterval(); // Интервал до следующего изменения препятствий
-    
+
     // Компоненты Three.js
     this.scene = null;
     this.camera = null;
     this.renderer = null;
     this.lights = [];
-    
+
     // Игровые объекты
     this.board = null;
     this.cube = null;
     this.enemyCubes = []; // Массив вражеских кубиков
     this.cubePositionHelper = null;
-    
+
     // Эффекты
     this.teleportEffects = [];
-    
+
     // Счетчики побед/поражений
     this.playerWins = 0;
     this.enemyWins = 0;
-    
+
     // Настройки ИИ
     this.aiEnabled = true; // Включен ли ИИ
     this.lastMoveDirection = null; // Последнее направление движения
-    
+
     // Вспомогательные объекты для отладки
     this.debugHelpers = {
       enabled: true, // Включаем отладочные элементы по умолчанию
       axesHelper: null,
       gridHelper: null
     };
-    
+
     // Ссылка на UI
     this.ui = null;
-    
+
     // Настройки камеры
-    this.cameraAngle = 45; // начальный угол камеры (в градусах)
+    this.cameraAngle = 225; // начальный угол камеры (в градусах)
     this.targetCameraAngle = 45; // целевой угол для анимации
     this.cameraAnimating = false; // флаг анимации камеры
+
+    // Обработчик завершения вращения куба
+    this.rotationCompletedHandler = null;
   }
 
   init() {
     // Инициализация Three.js
     this.initThree();
-    
+
     // Создание игровых объектов
     this.createGameObjects();
-    
+
     // Настройка камеры
     this.setupCamera();
-    
+
     // Добавление освещения
     this.setupLights();
-    
+
     // Добавление объектов на сцену
     this.addObjectsToScene();
-    
+
     // Настройка рендерера
     this.setupRenderer();
-    
+
     // Обработка изменения размера окна
     window.addEventListener('resize', () => this.onWindowResize());
-    
+
     // Удаляем отладочный элемент, если он существует и режим отладки выключен
     if (!this.debugHelpers.enabled) {
       const debugInfoElement = document.getElementById('debug-info');
@@ -82,7 +85,7 @@ export class Game {
         debugInfoElement.remove();
       }
     }
-    
+
     // Обновляем отладочную информацию, если режим отладки включен
     this.updateDebugInfo();
   }
@@ -91,7 +94,7 @@ export class Game {
     // Создаем сцену
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0xf0f0f0);
-    
+
     // Создаем перспективную камеру
     const aspect = window.innerWidth / window.innerHeight;
     this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
@@ -100,17 +103,17 @@ export class Game {
   createGameObjects() {
     // Создаем игровое поле
     this.board = new Board(this.boardSize.width, this.boardSize.height, this.cellSize);
-    
+
     // Создаем кубик игрока
     this.cube = new Cube(this.cellSize);
-    
+
     // Создаем вражеские кубики (3 штуки)
     for (let i = 0; i < 3; i++) {
       const enemyCube = new Cube(this.cellSize);
       enemyCube.setColor(0xff0000); // Красный цвет для всех вражеских кубиков
       this.enemyCubes.push(enemyCube);
     }
-    
+
     // Создаем вспомогательный объект для визуализации позиции кубика
     const cubePositionGeometry = new THREE.SphereGeometry(0.2, 16, 16);
     const cubePositionMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
@@ -123,53 +126,53 @@ export class Game {
     const boardWidth = this.boardSize.width * this.cellSize;
     const boardHeight = this.boardSize.height * this.cellSize;
     const maxDimension = Math.max(boardWidth, boardHeight);
-    
+
     // Настраиваем поле зрения (FOV) для перспективной камеры
     // Увеличиваем FOV для более широкого обзора
     this.camera.fov = 45;
     this.camera.updateProjectionMatrix();
-    
+
     // Увеличиваем расстояние камеры, чтобы поле всегда помещалось в поле зрения
     this.cameraDistance = maxDimension * 2.5;
     this.cameraHeight = maxDimension * 1.5; // Увеличиваем высоту камеры
-    
+
     // Устанавливаем начальную позицию камеры
     this.updateCameraPosition();
   }
-  
+
   // Обновляем позицию камеры в зависимости от текущего угла
   updateCameraPosition() {
     // Преобразуем угол из градусов в радианы
     const angleRad = (this.cameraAngle * Math.PI) / 180;
-    
+
     // Вычисляем позицию камеры на основе угла и расстояния
     const x = Math.sin(angleRad) * this.cameraDistance;
     const z = Math.cos(angleRad) * this.cameraDistance;
-    
+
     // Устанавливаем позицию камеры
     this.camera.position.set(x, this.cameraHeight, z);
-    
+
     // Направляем камеру на центр сцены, но немного вниз для лучшего обзора
     this.camera.lookAt(0, -2, 0);
-    
+
     // Обновляем матрицу проекции камеры
     this.camera.updateProjectionMatrix();
   }
-  
+
   // Анимируем вращение камеры
   animateCameraRotation() {
     if (!this.cameraAnimating) return;
-    
+
     // Вычисляем кратчайший путь к целевому углу
     let angleDiff = this.targetCameraAngle - this.cameraAngle;
-    
+
     // Нормализуем разницу углов в диапазоне [-180, 180]
     if (angleDiff > 180) angleDiff -= 360;
     if (angleDiff < -180) angleDiff += 360;
-    
+
     // Используем фиксированную скорость вращения
     const rotationSpeed = 5;
-    
+
     // Если мы достаточно близко к целевому углу, завершаем анимацию
     if (Math.abs(angleDiff) < rotationSpeed) {
       this.cameraAngle = this.targetCameraAngle;
@@ -177,24 +180,24 @@ export class Game {
       this.updateCameraPosition();
       return;
     }
-    
+
     // Иначе делаем шаг в направлении целевого угла
     const step = Math.sign(angleDiff) * rotationSpeed;
     this.cameraAngle += step;
-    
+
     // Нормализуем угол в диапазоне [0, 360]
     this.cameraAngle = (this.cameraAngle + 360) % 360;
-    
+
     // Обновляем позицию камеры
     this.updateCameraPosition();
   }
-  
+
   // Поворачиваем камеру влево на 90 градусов
   rotateCameraLeft() {
     this.targetCameraAngle = (this.cameraAngle + 90) % 360;
     this.cameraAnimating = true;
   }
-  
+
   // Поворачиваем камеру вправо на 90 градусов
   rotateCameraRight() {
     this.targetCameraAngle = (this.cameraAngle - 90 + 360) % 360;
@@ -206,24 +209,24 @@ export class Game {
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     this.scene.add(ambientLight);
     this.lights.push(ambientLight);
-    
+
     // Добавляем направленный свет (как солнце)
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
     directionalLight.position.set(10, 15, 10);
     directionalLight.castShadow = true;
-    
+
     // Настройка теней
     directionalLight.shadow.mapSize.width = 4096;
     directionalLight.shadow.mapSize.height = 4096;
     directionalLight.shadow.camera.near = 0.5;
     directionalLight.shadow.camera.far = 100;
-    
+
     const shadowSize = this.boardSize.width * this.cellSize * 0.8;
     directionalLight.shadow.camera.left = -shadowSize;
     directionalLight.shadow.camera.right = shadowSize;
     directionalLight.shadow.camera.top = shadowSize;
     directionalLight.shadow.camera.bottom = -shadowSize;
-    
+
     this.scene.add(directionalLight);
     this.lights.push(directionalLight);
   }
@@ -231,28 +234,28 @@ export class Game {
   addObjectsToScene() {
     // Добавляем игровое поле
     this.scene.add(this.board.mesh);
-    
+
     // Устанавливаем ссылку на сцену для кубика игрока
     this.cube.setScene(this.scene);
-    
+
     // Добавляем кубик игрока
     this.scene.add(this.cube.mesh);
-    
+
     // Устанавливаем ссылку на сцену для вражеских кубиков и добавляем их
     for (const enemyCube of this.enemyCubes) {
       enemyCube.setScene(this.scene);
       this.scene.add(enemyCube.mesh);
     }
-    
+
     // Добавляем вспомогательный объект для визуализации позиции кубика
     //this.scene.add(this.cubePositionHelper);
-    
+
     // Добавляем вспомогательные объекты для отладки
     if (this.debugHelpers.enabled) {
       // Добавляем вспомогательные оси координат
       //this.debugHelpers.axesHelper = new THREE.AxesHelper(this.boardSize.width * this.cellSize);
       //this.scene.add(this.debugHelpers.axesHelper);
-      
+
       // Добавляем вспомогательную сетку
       const gridSize = this.boardSize.width * this.cellSize * 2;
       const gridDivisions = this.boardSize.width * 2;
@@ -268,7 +271,7 @@ export class Game {
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    
+
     // Добавляем рендерер на страницу
     const container = document.getElementById('game-canvas');
 
@@ -279,11 +282,11 @@ export class Game {
   onWindowResize() {
     // Получаем новое соотношение сторон
     const aspect = window.innerWidth / window.innerHeight;
-    
+
     // Обновляем параметры перспективной камеры
     this.camera.aspect = aspect;
     this.camera.updateProjectionMatrix();
-    
+
     // Обновляем размер рендерера
     this.renderer.setSize(window.innerWidth, window.innerHeight);
   }
@@ -291,7 +294,7 @@ export class Game {
   start() {
     // Сбрасываем состояние игры
     this.reset();
-    
+
     // Активируем игру
     this.active = true;
   }
@@ -299,66 +302,66 @@ export class Game {
   reset() {
     // Сбрасываем собранные цифры
     this.collectedNumbers.clear();
-    
+
     // Сбрасываем счетчик ходов и интервал изменения препятствий
     this.moveCount = 0;
     this.nextObstacleChange = this.getRandomObstacleChangeInterval();
-    
+
     // Сбрасываем позицию кубика игрока
     const startPosition = this.board.getStartPosition();
     this.cube.reset(startPosition);
-    
+
     // Обновляем позицию меша кубика в соответствии с координатной системой поля
     const worldX = startPosition.x * this.cellSize - (this.boardSize.width * this.cellSize) / 2 + this.cellSize / 2;
     const worldZ = startPosition.y * this.cellSize - (this.boardSize.height * this.cellSize) / 2 + this.cellSize / 2;
-    
+
     this.cube.mesh.position.set(
       worldX,
       this.cellSize / 2,
       worldZ
     );
-    
+
     // Сбрасываем вращение кубика игрока
     this.cube.mesh.rotation.set(0, 0, 0);
-    
+
     // Размещаем вражеские кубики в случайных свободных ячейках
     let occupiedPositions = [startPosition];
-    
+
     for (const enemyCube of this.enemyCubes) {
       // Получаем случайную свободную позицию, отличную от занятых позиций
       const enemyPosition = this.getRandomFreePosition(occupiedPositions);
-      
+
       // Сбрасываем кубик
       enemyCube.reset(enemyPosition);
-      
+
       // Добавляем позицию в список занятых
       occupiedPositions.push(enemyPosition);
-      
+
       // Обновляем позицию меша вражеского кубика
       const enemyWorldX = enemyPosition.x * this.cellSize - (this.boardSize.width * this.cellSize) / 2 + this.cellSize / 2;
       const enemyWorldZ = enemyPosition.y * this.cellSize - (this.boardSize.height * this.cellSize) / 2 + this.cellSize / 2;
-      
+
       enemyCube.mesh.position.set(
         enemyWorldX,
         this.cellSize / 2,
         enemyWorldZ
       );
-      
+
       // Сбрасываем вращение вражеского кубика
       enemyCube.mesh.rotation.set(0, 0, 0);
     }
-    
+
     // Обновляем позицию вспомогательного объекта
     this.cubePositionHelper.position.x = worldX;
     this.cubePositionHelper.position.z = worldZ;
-    
+
     // Сбрасываем подсветку целевых ячеек
     this.board.updateTargetCellsHighlight(1);
-    
+
     // Сбрасываем счет
     this.playerWins = 0;
     this.enemyWins = 0;
-    
+
     // Обновляем UI
     if (this.ui) {
       this.ui.updateScore(this.playerWins, this.enemyWins);
@@ -368,47 +371,52 @@ export class Game {
   animate() {
     // Запускаем цикл анимации
     requestAnimationFrame(() => this.animate());
-    
+
     // Анимируем вращение камеры
     if (this.cameraAnimating) {
       this.animateCameraRotation();
     }
-    
+
     // Обновляем эффекты телепортации
     this.updateTeleportEffects();
-    
+
     // Обновляем состояние кубиков
     if (this.active) {
       const playerRotationCompleted = this.cube.update(this.boardSize, this.cellSize);
-      
+
       // Обновляем вражеские кубики
-      const enemyRotationsCompleted = this.enemyCubes.map(enemyCube => 
+      const enemyRotationsCompleted = this.enemyCubes.map(enemyCube =>
         enemyCube.update(this.boardSize, this.cellSize)
       );
-      
+
       // Если вращение завершено и кубики не телепортируются, проверяем столкновения
-      const allEnemyCubesReady = enemyRotationsCompleted.every(completed => completed !== false) && 
-                                this.enemyCubes.every(enemyCube => !enemyCube.teleporting);
-      
+      const allEnemyCubesReady = enemyRotationsCompleted.every(completed => completed !== false) &&
+        this.enemyCubes.every(enemyCube => !enemyCube.teleporting);
+
       if (playerRotationCompleted && !this.cube.teleporting && allEnemyCubesReady) {
         this.checkTargetCell();
-        
+
         // Проверяем столкновение кубиков
         if (!this.cube.rotationInProgress && this.enemyCubes.every(enemyCube => !enemyCube.rotationInProgress)) {
           this.checkCubesCollision();
+          
+          // Вызываем обработчик завершения вращения кубика, если он установлен
+          if (this.rotationCompletedHandler) {
+            this.rotationCompletedHandler();
+          }
         }
       }
-      
+
       // Обновляем позицию вспомогательного объекта
       const worldX = this.cube.position.x * this.cellSize - (this.boardSize.width * this.cellSize) / 2 + this.cellSize / 2;
       const worldZ = this.cube.position.y * this.cellSize - (this.boardSize.height * this.cellSize) / 2 + this.cellSize / 2;
       this.cubePositionHelper.position.x = worldX;
       this.cubePositionHelper.position.z = worldZ;
     }
-    
+
     // Обновляем отладочную информацию
     this.updateDebugInfo();
-    
+
     // Рендерим сцену
     this.renderer.render(this.scene, this.camera);
   }
@@ -418,10 +426,10 @@ export class Game {
     // Определяем, в каком квадранте находится камера
     // Нормализуем угол камеры к диапазону [0, 360)
     const normalizedAngle = (this.cameraAngle % 360 + 360) % 360;
-    
+
     // Определяем сектор (каждые 90 градусов)
     const sector = Math.floor((normalizedAngle + 45) / 90) % 4;
-    
+
     // Преобразуем направление в зависимости от сектора
     switch (sector) {
       case 0: // Примерно 0 градусов (камера смотрит с севера)
@@ -526,11 +534,11 @@ export class Game {
     
     return true;
   }
-  
+
   // Получаем новую позицию после хода в указанном направлении
   getNewPosition(position, direction) {
     const newPosition = { ...position };
-    
+
     switch (direction) {
       case 'up':
         newPosition.y += 1;
@@ -545,75 +553,75 @@ export class Game {
         newPosition.x += 1;
         break;
     }
-    
+
     return newPosition;
   }
-  
+
   // Фильтруем ходы вражеских кубиков, чтобы избежать столкновений
   filterValidEnemyMoves(enemyMoves) {
     // Если нет ходов, возвращаем пустой массив
     if (enemyMoves.length === 0) {
       return [];
     }
-    
+
     // Создаем карту новых позиций
     const positionMap = new Map();
-    
+
     // Добавляем текущие позиции кубиков в карту
     for (const enemyCube of this.enemyCubes) {
       const posKey = `${enemyCube.position.x},${enemyCube.position.y}`;
       positionMap.set(posKey, enemyCube);
     }
-    
+
     // Фильтруем ходы, чтобы избежать столкновений
     const validMoves = [];
-    
+
     for (const move of enemyMoves) {
       const newPosKey = `${move.newPosition.x},${move.newPosition.y}`;
-      
+
       // Проверяем, не занята ли новая позиция другим кубиком
       if (!positionMap.has(newPosKey)) {
         // Добавляем ход в список валидных
         validMoves.push(move);
-        
+
         // Обновляем карту позиций
         const oldPosKey = `${move.cube.position.x},${move.cube.position.y}`;
         positionMap.delete(oldPosKey);
         positionMap.set(newPosKey, move.cube);
       }
     }
-    
+
     return validMoves;
   }
 
   checkTargetCell() {
     // Получаем текущую позицию кубика
     const { x, y } = this.cube.position;
-    
+
     // Получаем значение нижней грани кубика
     const bottomValue = this.cube.getBottomValue();
-    
+
     // Определяем следующую цифру, которую нужно собрать
     const nextNumberToCollect = this.collectedNumbers.size + 1;
-    
+
     // Проверяем, находится ли кубик на целевой ячейке с соответствующим значением
     // и является ли это значение следующим в последовательности
     if (this.board.checkTargetCell(x, y, bottomValue) && bottomValue === nextNumberToCollect) {
       // Добавляем собранное значение
       this.collectedNumbers.add(bottomValue);
-      
+
       // Обновляем подсветку целевых ячеек
       this.board.updateTargetCellsHighlight(nextNumberToCollect + 1);
-      
+
       // Уведомляем UI о изменении количества собранных цифр
       if (this.onCollectedNumbersChanged) {
         this.onCollectedNumbersChanged(this.collectedNumbers.size);
       }
-      
+
       // Если собраны все цифры, завершаем игру
       if (this.collectedNumbers.size === this.board.getTargetCellsCount()) {
         this.active = false;
-        
+
         // Уведомляем о завершении игры
         if (this.onGameCompleted) {
           this.onGameCompleted();
@@ -639,7 +647,10 @@ export class Game {
 
   // Проверяем, вращается ли кубик
   isCubeRotating() {
-    return this.cube.rotationInProgress;
+    return this.cube.rotationInProgress || 
+      this.cube.teleporting || 
+      this.enemyCubes.some(cube => cube.rotationInProgress) ||
+      this.enemyCubes.some(cube => cube.teleporting);
   }
 
   // Обновляем отладочную информацию
@@ -647,7 +658,7 @@ export class Game {
     return;
     // Если отладка отключена, ничего не делаем
     if (!this.debugHelpers.enabled) return;
-    
+
     // Создаем или обновляем элемент для отображения отладочной информации
     let debugInfoElement = document.getElementById('debug-info');
     if (!debugInfoElement) {
@@ -665,7 +676,7 @@ export class Game {
       debugInfoElement.style.display = 'block';
       document.body.appendChild(debugInfoElement);
     }
-    
+
     // Обновляем содержимое
     const { top, bottom, left, right, front, back } = this.cube.faceValues;
     debugInfoElement.innerHTML = `
@@ -683,7 +694,7 @@ export class Game {
   // Включить/выключить вспомогательные объекты для отладки
   toggleDebugHelpers() {
     this.debugHelpers.enabled = !this.debugHelpers.enabled;
-    
+
     if (this.debugHelpers.enabled) {
       // Включаем вспомогательные объекты
       if (this.debugHelpers.axesHelper) {
@@ -694,7 +705,7 @@ export class Game {
       }
       this.scene.add(this.cubePositionHelper);
       //this.cube.orientationHelpers.visible = true;
-      
+
       // Обновляем отладочную информацию
       this.updateDebugInfo();
       const debugInfoElement = document.getElementById('debug-info');
@@ -711,7 +722,7 @@ export class Game {
       }
       this.scene.remove(this.cubePositionHelper);
       //this.cube.orientationHelpers.visible = false;
-      
+
       // Скрываем отладочную информацию
       const debugInfoElement = document.getElementById('debug-info');
       if (debugInfoElement) {
@@ -733,23 +744,23 @@ export class Game {
   // Обновляем препятствия
   updateObstacles() {
     console.log("Обновляем препятствия!");
-    
+
     // Сохраняем текущую позицию кубика
     const cubePosition = { ...this.cube.position };
-    
+
     // Обновляем препятствия на доске, передавая текущую позицию кубика
     this.board.setupObstacleCells(cubePosition);
-    
+
     // Сбрасываем счетчик до следующего изменения препятствий
     this.nextObstacleChange = this.getRandomObstacleChangeInterval();
     // Сбрасываем счетчик ходов для отсчета до следующего изменения
     this.moveCount = 0;
-    
+
     console.log(`Следующее изменение препятствий через ${this.nextObstacleChange} ходов`);
-    
+
     // Убираем показ уведомления
   }
-  
+
   // Увеличить высоту камеры
   increaseCameraHeight() {
     const maxDimension = Math.max(this.boardSize.width, this.boardSize.height) * this.cellSize;
@@ -757,7 +768,7 @@ export class Game {
     this.cameraHeight = newHeight;
     this.updateCameraPosition();
   }
-  
+
   // Уменьшить высоту камеры
   decreaseCameraHeight() {
     const maxDimension = Math.max(this.boardSize.width, this.boardSize.height) * this.cellSize;
@@ -769,25 +780,25 @@ export class Game {
   // Получаем случайную свободную позицию, отличную от указанных
   getRandomFreePosition(excludePositions) {
     const allPositions = [];
-    
+
     // Собираем все свободные позиции
     for (let y = 0; y < this.boardSize.height; y++) {
       for (let x = 0; x < this.boardSize.width; x++) {
         // Пропускаем позиции, которые нужно исключить
         if (excludePositions.some(pos => pos.x === x && pos.y === y)) continue;
-        
+
         // Пропускаем препятствия
         if (this.board.isObstacle(x, y)) continue;
-        
+
         allPositions.push({ x, y });
       }
     }
-    
+
     // Если нет свободных позиций, возвращаем позицию по умолчанию
     if (allPositions.length === 0) {
       return { x: 0, y: 0 };
     }
-    
+
     // Выбираем случайную позицию
     const randomIndex = Math.floor(Math.random() * allPositions.length);
     return allPositions[randomIndex];
@@ -797,15 +808,15 @@ export class Game {
   checkCubesCollision() {
     // Получаем позицию кубика игрока
     const playerPos = this.cube.position;
-    
+
     // Проверяем столкновение с каждым вражеским кубиком
     for (const enemyCube of this.enemyCubes) {
       // Получаем позицию вражеского кубика
       const enemyPos = enemyCube.position;
-      
+
       // Проверяем, находятся ли кубики на одной клетке
       const isSameCell = (playerPos.x === enemyPos.x && playerPos.y === enemyPos.y);
-      
+
       // Проверяем, находятся ли кубики на соседних клетках
       const isAdjacent = (
         // По горизонтали
@@ -813,73 +824,73 @@ export class Game {
         // По вертикали
         (Math.abs(playerPos.y - enemyPos.y) === 1 && playerPos.x === enemyPos.x)
       );
-      
+
       if (isSameCell || isAdjacent) {
         console.log("Кубики столкнулись! Начинаем битву!");
-        
+
         // Получаем значения верхних граней
         const playerTopValue = this.cube.getTopValue();
         const enemyTopValue = enemyCube.getTopValue();
-        
+
         // Выводим подробную отладочную информацию
         console.log("Значения граней игрока:", this.cube.faceValues);
         console.log("Значения граней врага:", enemyCube.faceValues);
         console.log(`Значение игрока: ${playerTopValue}, значение врага: ${enemyTopValue}`);
-        
+
         // Определяем победителя
         if (playerTopValue > enemyTopValue) {
           // Игрок победил
           console.log("Игрок победил!");
           this.playerWins++;
-          
+
           // Телепортируем вражеский кубик
           this.teleportEnemyCube(enemyCube);
         } else if (enemyTopValue > playerTopValue) {
           // Враг победил
           console.log("Враг победил!");
           this.enemyWins++;
-          
+
           // Телепортируем кубик игрока
           this.teleportPlayerCube();
         } else {
           // Ничья
           console.log("Ничья!");
-          
+
           // При ничье на одной клетке телепортируем оба кубика
           if (isSameCell) {
             this.teleportBothCubes(enemyCube);
           }
         }
-        
+
         // После обработки столкновения с одним кубиком прерываем цикл
         break;
       }
     }
   }
-  
+
   // Телепортируем вражеский кубик в случайную свободную ячейку
   teleportEnemyCube(enemyCube) {
     // Собираем все текущие позиции кубиков
     const allPositions = [
-      this.cube.position, 
+      this.cube.position,
       ...this.enemyCubes.map(cube => cube.position)
     ];
-    
+
     // Получаем случайную свободную позицию, отличную от всех текущих позиций
     const newPosition = this.getRandomFreePosition(allPositions);
-    
+
     // Запускаем анимацию телепортации
     this.animateTeleport(enemyCube, newPosition);
   }
-  
+
   // Телепортируем кубик игрока в случайную свободную ячейку
   teleportPlayerCube() {
     // Собираем все текущие позиции кубиков
     const allPositions = this.enemyCubes.map(cube => cube.position);
-    
+
     // Получаем случайную свободную позицию, отличную от всех текущих позиций
     const newPosition = this.getRandomFreePosition(allPositions);
-    
+
     // Запускаем анимацию телепортации
     this.animateTeleport(this.cube, newPosition);
   }
@@ -890,55 +901,55 @@ export class Game {
     const otherPositions = this.enemyCubes
       .filter(cube => cube !== enemyCube)
       .map(cube => cube.position);
-    
+
     // Телепортируем кубик игрока
     const newPlayerPosition = this.getRandomFreePosition(otherPositions);
-    
+
     // Добавляем новую позицию игрока в список занятых позиций
     const updatedPositions = [...otherPositions, newPlayerPosition];
-    
+
     // Запускаем анимацию телепортации для игрока
     this.animateTeleport(this.cube, newPlayerPosition);
-    
+
     // Телепортируем вражеский кубик
     const newEnemyPosition = this.getRandomFreePosition(updatedPositions);
-    
+
     // Запускаем анимацию телепортации для врага
     this.animateTeleport(enemyCube, newEnemyPosition);
   }
-  
+
   // Анимация телепортации кубика
   animateTeleport(cube, newPosition) {
     // Флаг, указывающий, что идет анимация телепортации
     cube.teleporting = true;
-    
+
     // Текущая позиция кубика в мировых координатах
     const currentWorldX = cube.mesh.position.x;
     const currentWorldZ = cube.mesh.position.z;
-    
+
     // Целевая позиция в мировых координатах
     const targetWorldX = newPosition.x * this.cellSize - (this.boardSize.width * this.cellSize) / 2 + this.cellSize / 2;
     const targetWorldZ = newPosition.y * this.cellSize - (this.boardSize.height * this.cellSize) / 2 + this.cellSize / 2;
-    
+
     // Высота, на которую поднимется кубик
     const teleportHeight = 10;
-    
+
     // Длительность анимации (в кадрах)
     const animationDuration = 60; // примерно 1 секунда при 60 FPS
-    
+
     // Текущий кадр анимации
     let frame = 0;
-    
+
     // Сохраняем начальное вращение кубика
     const initialRotation = {
       x: cube.mesh.rotation.x,
       y: cube.mesh.rotation.y,
       z: cube.mesh.rotation.z
     };
-    
+
     // Создаем эффект телепортации в начальной позиции
     this.createTeleportEffect(currentWorldX, this.cellSize / 2, currentWorldZ, 0x00ffff);
-    
+
     // Функция для обновления анимации
     const updateTeleportAnimation = () => {
       // Если анимация завершена, останавливаем её
@@ -946,121 +957,121 @@ export class Game {
         // Сбрасываем состояние кубика, сохраняя новую позицию
         const oldPosition = cube.position;
         cube.reset(newPosition);
-        
+
         // Устанавливаем точную конечную позицию
         cube.mesh.position.set(
           targetWorldX,
           this.cellSize / 2,
           targetWorldZ
         );
-        
+
         // Сбрасываем флаг телепортации
         cube.teleporting = false;
-        
+
         // Создаем эффект телепортации в конечной позиции
         this.createTeleportEffect(targetWorldX, this.cellSize / 2, targetWorldZ, 0x00ffff);
-        
+
         return;
       }
-      
+
       // Вычисляем прогресс анимации (от 0 до 1)
       const progress = frame / animationDuration;
-      
+
       // Первая половина анимации - подъем
       if (progress < 0.5) {
         // Нормализуем прогресс для первой половины (от 0 до 1)
         const upProgress = progress * 2;
-        
+
         // Используем синусоидальную функцию для плавного подъема
         const heightFactor = Math.sin(upProgress * Math.PI / 2);
-        
+
         // Вычисляем текущую высоту
         const currentHeight = this.cellSize / 2 + teleportHeight * heightFactor;
-        
+
         // Обновляем позицию кубика (только по Y)
         cube.mesh.position.y = currentHeight;
-        
+
         // Вращаем кубик вокруг всех осей
         cube.mesh.rotation.x = initialRotation.x + upProgress * Math.PI * 2;
         cube.mesh.rotation.y = initialRotation.y + upProgress * Math.PI * 4;
         cube.mesh.rotation.z = initialRotation.z + upProgress * Math.PI * 2;
-      } 
+      }
       // Вторая половина анимации - перемещение и падение
       else {
         // Нормализуем прогресс для второй половины (от 0 до 1)
         const downProgress = (progress - 0.5) * 2;
-        
+
         // Используем косинусоидальную функцию для плавного падения
         const heightFactor = Math.cos(downProgress * Math.PI / 2);
-        
+
         // Вычисляем текущую высоту
         const currentHeight = this.cellSize / 2 + teleportHeight * heightFactor;
-        
+
         // Интерполируем X и Z координаты
         const currentX = currentWorldX + (targetWorldX - currentWorldX) * downProgress;
         const currentZ = currentWorldZ + (targetWorldZ - currentWorldZ) * downProgress;
-        
+
         // Обновляем позицию кубика
         cube.mesh.position.set(
           currentX,
           currentHeight,
           currentZ
         );
-        
+
         // Продолжаем вращение кубика, но замедляем его к концу анимации
         const rotationSlowdown = 1 - downProgress;
         cube.mesh.rotation.x = initialRotation.x + (1 + downProgress) * Math.PI * 2;
         cube.mesh.rotation.y = initialRotation.y + (1 + downProgress) * Math.PI * 4;
         cube.mesh.rotation.z = initialRotation.z + (1 + downProgress) * Math.PI * 2;
       }
-      
+
       // Увеличиваем счетчик кадров
       frame++;
-      
+
       // Запрашиваем следующий кадр анимации
       requestAnimationFrame(updateTeleportAnimation);
     };
-    
+
     // Запускаем анимацию
     updateTeleportAnimation();
   }
-  
+
   // Создаем визуальный эффект телепортации
   createTeleportEffect(x, y, z, color) {
     // Количество частиц
     const particleCount = 50;
-    
+
     // Создаем геометрию для частиц
     const particleGeometry = new THREE.BufferGeometry();
     const positions = new Float32Array(particleCount * 3);
     const velocities = [];
     const sizes = new Float32Array(particleCount);
-    
+
     // Инициализируем частицы
     for (let i = 0; i < particleCount; i++) {
       // Случайное положение вокруг центра
       const angle = Math.random() * Math.PI * 2;
       const radius = Math.random() * 0.5;
-      
+
       positions[i * 3] = x + Math.cos(angle) * radius;
       positions[i * 3 + 1] = y;
       positions[i * 3 + 2] = z + Math.sin(angle) * radius;
-      
+
       // Случайная скорость
       velocities.push({
         x: (Math.random() - 0.5) * 0.2,
         y: Math.random() * 0.2 + 0.1,
         z: (Math.random() - 0.5) * 0.2
       });
-      
+
       // Случайный размер
       sizes[i] = Math.random() * 0.2 + 0.1;
     }
-    
+
     // Устанавливаем атрибуты геометрии
     particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     particleGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-    
+
     // Создаем материал для частиц
     const particleMaterial = new THREE.PointsMaterial({
       color: color,
@@ -1070,13 +1081,13 @@ export class Game {
       blending: THREE.AdditiveBlending,
       sizeAttenuation: true
     });
-    
+
     // Создаем систему частиц
     const particles = new THREE.Points(particleGeometry, particleMaterial);
-    
+
     // Добавляем систему частиц на сцену
     this.scene.add(particles);
-    
+
     // Сохраняем информацию об эффекте
     const effect = {
       particles,
@@ -1085,57 +1096,56 @@ export class Game {
       lifetime: 0,
       maxLifetime: 60 // 1 секунда при 60 FPS
     };
-    
+
     // Добавляем эффект в список активных эффектов
     this.teleportEffects.push(effect);
   }
-  
+
   // Обновляем эффекты телепортации
   updateTeleportEffects() {
     // Обновляем каждый эффект
     for (let i = this.teleportEffects.length - 1; i >= 0; i--) {
       const effect = this.teleportEffects[i];
-      
+
       // Увеличиваем время жизни эффекта
       effect.lifetime++;
-      
+
       // Если эффект истек, удаляем его
       if (effect.lifetime >= effect.maxLifetime) {
         this.scene.remove(effect.particles);
         this.teleportEffects.splice(i, 1);
         continue;
       }
-      
+
       // Вычисляем коэффициент затухания
       const fadeOutFactor = 1 - effect.lifetime / effect.maxLifetime;
-      
+
       // Обновляем позиции частиц
       const positions = effect.particles.geometry.attributes.position.array;
-      
+
       for (let j = 0; j < positions.length / 3; j++) {
         // Обновляем позицию частицы
         positions[j * 3] += effect.velocities[j].x;
         positions[j * 3 + 1] += effect.velocities[j].y;
         positions[j * 3 + 2] += effect.velocities[j].z;
-        
+
         // Применяем гравитацию
         effect.velocities[j].y -= 0.01;
       }
-      
+
       // Обновляем прозрачность
       effect.particles.material.opacity = fadeOutFactor * 0.8;
-      
+
       // Обновляем буфер позиций
       effect.particles.geometry.attributes.position.needsUpdate = true;
     }
   }
 
-  // Планируем следующий ход ИИ
-  scheduleAiMove() {
-    // Этот метод больше не нужен, так как ИИ ходит синхронно с игроком
+  // Метод для установки обработчика завершения вращения кубика
+  setRotationCompletedHandler(handler) {
+    this.rotationCompletedHandler = handler;
   }
-  
-  // Получаем все возможные направления движения для вражеского кубика
+
   getPossibleMoveDirections(enemyCube) {
     const directions = ['up', 'down', 'left', 'right'];
     const possibleDirections = [];

@@ -1,16 +1,9 @@
 <template>
   <div id="app">
-    <game-container
-      :moves="movesCounter"
-      :collected-numbers="collectedNumbers"
-      :total-target-numbers="totalTargetNumbers"
-      :next-number="nextNumber"
-      :obstacle-info="obstacleInfo"
-      @move="handleMove"
-      @camera-rotate="handleCameraRotation"
-      @camera-height="handleCameraHeight"
-      @debug-toggle="toggleDebugHelpers"
-    />
+    <game-container :moves="movesCounter" :collected-numbers="collectedNumbers"
+      :total-target-numbers="totalTargetNumbers" :next-number="nextNumber" :obstacle-info="obstacleInfo"
+      @move="handleMove" @camera-rotate="handleCameraRotation" @camera-height="handleCameraHeight"
+      @debug-toggle="toggleDebugHelpers" />
     <div id="game-start" class="game-screen" v-if="!gameStarted">
       <h1>Stacker</h1>
       <p>Перекатывайте кубик и собирайте цифры от 1 до 6 в правильном порядке!</p>
@@ -28,7 +21,7 @@
 import { ref, onMounted } from 'vue'
 import GameContainer from './components/GameContainer.vue'
 import { Game } from './js/game'
-import {UI} from "./js/ui.js";
+import { UI } from "./js/ui.js";
 
 export default {
   name: 'App',
@@ -43,6 +36,8 @@ export default {
     const totalTargetNumbers = ref(6)
     const nextNumber = ref(1)
     const obstacleInfo = ref(null)
+    const moveQueue = ref([])
+    const processingMove = ref(false)
     let game = null
 
     onMounted(() => {
@@ -67,6 +62,17 @@ export default {
         ui.showEndScreen();
       });
 
+      // Устанавливаем обработчик для проверки очереди ходов
+      game.setRotationCompletedHandler(() => {
+        if (moveQueue.value.length > 0) {
+          const nextDirection = moveQueue.value.shift()
+          const moved = game.moveCube(nextDirection)
+          if (moved) {
+            movesCounter.value++
+          }
+        }
+      });
+
       // Инициализируем игру
       game.init();
 
@@ -87,15 +93,22 @@ export default {
       movesCounter.value = 0
       collectedNumbers.value = 0
       nextNumber.value = 1
+      moveQueue.value = []
       game.reset()
       game.start()
     }
 
     const handleMove = (direction) => {
-      if (game.isActive() && !game.isCubeRotating()) {
-        const moved = game.moveCube(direction)
-        if (moved) {
-          movesCounter.value++
+      if (game.isActive()) {
+        if (game.isCubeRotating()) {
+          // If cube is rotating or teleporting, add move to queue
+          moveQueue.value.push(direction)
+        } else {
+          // If cube is not rotating, execute the move immediately
+          const moved = game.moveCube(direction)
+          if (moved) {
+            movesCounter.value++
+          }
         }
       }
     }
@@ -128,6 +141,7 @@ export default {
       totalTargetNumbers,
       nextNumber,
       obstacleInfo,
+      moveQueue,
       startGame,
       restartGame,
       handleMove,
@@ -198,4 +212,4 @@ export default {
     max-width: 90%;
   }
 }
-</style> 
+</style>

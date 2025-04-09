@@ -23,8 +23,10 @@
         </div>
       </div>
       <div class="camera-controls">
-        <button @click="$emit('camera-rotate', 'left')" class="camera-btn" title="Повернуть камеру влево (Q)">&#8634;</button>
-        <button @click="$emit('camera-rotate', 'right')" class="camera-btn" title="Повернуть камеру вправо (E)">&#8635;</button>
+        <button @click="$emit('camera-rotate', 'left')" class="camera-btn"
+          title="Повернуть камеру влево (Q)">&#8634;</button>
+        <button @click="$emit('camera-rotate', 'right')" class="camera-btn"
+          title="Повернуть камеру вправо (E)">&#8635;</button>
         <button @click="$emit('camera-height', 'up')" class="camera-btn" title="Поднять камеру (R)">&#8593;</button>
         <button @click="$emit('camera-height', 'down')" class="camera-btn" title="Опустить камеру (F)">&#8595;</button>
       </div>
@@ -36,7 +38,7 @@
 </template>
 
 <script>
-import {onMounted, onUnmounted, ref} from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 
 export default {
   name: 'GameContainer',
@@ -279,13 +281,27 @@ export default {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translate(-50%, -70%); }
-  to { opacity: 1; transform: translate(-50%, -50%); }
+  from {
+    opacity: 0;
+    transform: translate(-50%, -70%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
 }
 
 @keyframes fadeOut {
-  from { opacity: 1; transform: translate(-50%, -50%); }
-  to { opacity: 0; transform: translate(-50%, -30%); }
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(-50%, -30%);
+  }
 }
 
 @media (max-width: 768px) {
@@ -312,4 +328,4 @@ export default {
     font-size: 18px;
   }
 }
-</style> 
+</style>
