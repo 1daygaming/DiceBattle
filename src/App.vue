@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <game-container :moves="movesCounter" :collected-numbers="collectedNumbers"
-      :total-target-numbers="totalTargetNumbers" :next-number="nextNumber" :obstacle-info="obstacleInfo"
+      :total-target-numbers="totalTargetNumbers" :next-number="nextNumber" :obstacle-info="obstacleInfo || 0"
       @move="handleMove" @camera-rotate="handleCameraRotation" @camera-height="handleCameraHeight"
       @debug-toggle="toggleDebugHelpers" />
     <div id="game-start" class="game-screen" v-if="!gameStarted">
@@ -22,7 +22,7 @@ import { ref, onMounted, defineComponent } from 'vue'
 import GameContainer from './components/GameContainer.vue'
 import { Game } from './js/game'
 import { UI } from "./js/ui";
-import type { Game as GameType } from './types/game'
+import {Direction} from "@/js/types";
 
 export default defineComponent({
   name: 'App',
@@ -37,20 +37,17 @@ export default defineComponent({
     const totalTargetNumbers = ref<number>(6)
     const nextNumber = ref<number>(1)
     const obstacleInfo = ref<number | null>(null)
-    const moveQueue = ref<string[]>([])
+    const moveQueue = ref<Direction[]>([])
     let game: Game | null = null
 
 
     onMounted(() => {
       if (game) return
       console.log('call mount')
-      game = new Game() as GameType;
+      game = new Game();
 
       // Создаем экземпляр UI
       const ui = new UI(game);
-
-      // Устанавливаем ссылку на UI в игре
-      game.setUI(ui);
 
       // Устанавливаем обработчик изменения количества собранных цифр
       game.setCollectedNumbersChangedHandler((count: number) => {
@@ -102,8 +99,8 @@ export default defineComponent({
       }
     }
 
-    const handleMove = (direction: string): void => {
-      if (game && game.isActive()) {
+    const handleMove = (direction: Direction): void => {
+      if (game && game.state.active) {
         if (game.isCubeRotating()) {
           // If cube is rotating or teleporting, add move to queue
           moveQueue.value.push(direction)
@@ -121,9 +118,9 @@ export default defineComponent({
       if (!game) return;
 
       if (direction === 'left') {
-        game.rotateCameraLeft()
+        game.cameraController?.rotateLeft()
       } else if (direction === 'right') {
-        game.rotateCameraRight()
+        game.cameraController?.rotateRight()
       }
     }
 
@@ -131,9 +128,9 @@ export default defineComponent({
       if (!game) return;
 
       if (direction === 'up') {
-        game.increaseCameraHeight()
+        game.cameraController?.increaseHeight()
       } else if (direction === 'down') {
-        game.decreaseCameraHeight()
+        game.cameraController?.decreaseHeight()
       }
     }
 

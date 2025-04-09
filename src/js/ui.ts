@@ -1,4 +1,4 @@
-import { Game } from "@/types/game";
+import { Game } from "./game";
 
 export class UI {
   game: Game;
@@ -108,14 +108,14 @@ export class UI {
     const rotateLeftButton = document.getElementById('rotateLeft');
     if (rotateLeftButton) {
       rotateLeftButton.addEventListener('click', () => {
-        this.game.rotateCameraLeft();
+        this.game.cameraController?.rotateLeft();
       });
     }
     
     const rotateRightButton = document.getElementById('rotateRight');
     if (rotateRightButton) {
       rotateRightButton.addEventListener('click', () => {
-        this.game.rotateCameraRight();
+        this.game.cameraController?.rotateRight();
       });
     }
     
@@ -123,22 +123,22 @@ export class UI {
     const cameraUpButton = document.getElementById('cameraUp');
     if (cameraUpButton) {
       cameraUpButton.addEventListener('click', () => {
-        this.game.increaseCameraHeight();
+        this.game.cameraController?.increaseHeight();
       });
     }
     
     const cameraDownButton = document.getElementById('cameraDown');
     if (cameraDownButton) {
       cameraDownButton.addEventListener('click', () => {
-        this.game.decreaseCameraHeight();
+        this.game.cameraController?.decreaseHeight();
       });
     }
   }
 
   updateCounters() {
     // Обновляем информацию о смене препятствий
-    if (this.game.isActive()) {
-      const movesLeft = this.game.nextObstacleChange - this.game.moveCount;
+    if (this.game.state.active) {
+      const movesLeft = 0
       this.obstacleInfoElement.textContent = `Смена препятствий через: ${movesLeft} ходов`;
       this.obstacleInfoElement.style.display = 'block';
     } else {

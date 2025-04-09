@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { Position } from './types';
+import { Board } from './board';
 
 interface FaceValues {
   top: number;
@@ -7,11 +9,6 @@ interface FaceValues {
   right: number;
   front: number;
   back: number;
-}
-
-interface Position {
-  x: number;
-  y: number;
 }
 
 interface BoardSize {
@@ -34,9 +31,12 @@ export class Cube {
   pivot: THREE.Object3D | null;
   faceMaterials: Record<number, THREE.MeshStandardMaterial>;
   orientationHelpers?: THREE.Group;
-  teleporting?: boolean;
+  teleporting: boolean;
+  boardSize: { width: number; height: number };
+  cellSize: number;
+  board: Board; // TODO: Replace with proper Board type
 
-  constructor(size = 1) {
+  constructor(size = 1, boardSize: { width: number; height: number }, cellSize: number, board: Board) {
     this.size = size;
     this.mesh = null;
     this.position = { x: 0, y: 0 };
@@ -56,6 +56,10 @@ export class Cube {
     this.rotationSpeed = Math.PI / 36; // Уменьшаем скорость вращения для более плавного движения
     this.scene = null; // Ссылка на сцену
     this.pivot = null; // Точка вращения
+    this.teleporting = false;
+    this.boardSize = boardSize;
+    this.cellSize = cellSize;
+    this.board = board;
     
     // Создаем и сохраняем материалы для каждого значения
     this.faceMaterials = {};
@@ -496,8 +500,8 @@ export class Cube {
   }
 
   // Сбросить куб в начальное положение
-  reset(startPosition: Position): Position {
-    this.position = { ...startPosition };
+  reset(newPosition: Position): Position {
+    this.position = { ...newPosition };
     this.rotationInProgress = false;
     this.faceValues = {
       top: 1,
