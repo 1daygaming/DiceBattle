@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import {Position, TeleportEffect} from './types';
-import {Cube} from './cube';
+import {Position, TeleportEffect} from '../types';
+import {CubeController} from './CubeController';
 
 export class TeleportController {
   private scene: THREE.Scene;
@@ -14,7 +14,7 @@ export class TeleportController {
     this.cellSize = cellSize;
   }
 
-  public animateTeleport(cube: Cube, newPosition: Position): void {
+  public animateTeleport(cube: CubeController, newPosition: Position): void {
     if (!cube.mesh) return;
     
     cube.teleporting = true;

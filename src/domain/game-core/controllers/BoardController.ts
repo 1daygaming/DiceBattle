@@ -13,7 +13,7 @@ interface Position {
   value?: number;
 }
 
-export class Board {
+export class BoardController {
   width: number;
   height: number;
   cellSize: number;

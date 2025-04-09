@@ -1,5 +1,5 @@
-import { Direction, Position } from './types';
-import { Cube } from './cube';
+import { Direction, Position } from '../types';
+import { CubeController } from './CubeController';
 import { CameraController } from './CameraController';
 
 export class AIController {
@@ -9,7 +9,7 @@ export class AIController {
     this.cameraController = cameraController;
   }
 
-  public getPossibleMoveDirections(enemyCube: Cube, otherEnemyCubes: Cube[]): Direction[] {
+  public getPossibleMoveDirections(enemyCube: CubeController, otherEnemyCubes: CubeController[]): Direction[] {
     const directions: Direction[] = ['up', 'down', 'left', 'right'];
     const possibleDirections: Direction[] = [];
     
@@ -36,7 +36,7 @@ export class AIController {
     return possibleDirections;
   }
 
-  public getAiMoveDirection(enemyCube: Cube, playerCube: Cube, otherEnemyCubes: Cube[]): Direction | null {
+  public getAiMoveDirection(enemyCube: CubeController, playerCube: CubeController, otherEnemyCubes: CubeController[]): Direction | null {
     const possibleDirections = this.getPossibleMoveDirections(enemyCube, otherEnemyCubes);
     
     if (possibleDirections.length === 0) {

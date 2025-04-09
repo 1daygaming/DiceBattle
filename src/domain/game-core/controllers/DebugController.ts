@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { DebugHelpers } from './types';
-import { Cube } from './cube';
+import { DebugHelpers } from '../types';
+import { CubeController } from './CubeController';
 
 export class DebugController {
   private scene: THREE.Scene;
@@ -45,7 +45,7 @@ export class DebugController {
     this.updateDebugInfo();
   }
 
-  public updateDebugInfo(cube?: Cube): void {
+  public updateDebugInfo(cube?: CubeController): void {
     if (!this.debugHelpers.enabled) return;
 
     let debugInfoElement = document.getElementById('debug-info');
@@ -80,7 +80,7 @@ export class DebugController {
     }
   }
 
-  public updateCubePositionHelper(cube: Cube, cellSize: number, boardSize: { width: number; height: number }): void {
+  public updateCubePositionHelper(cube: CubeController, cellSize: number, boardSize: { width: number; height: number }): void {
     if (!this.cubePositionHelper) return;
 
     const worldX = cube.position.x * cellSize - (boardSize.width * cellSize) / 2 + cellSize / 2;

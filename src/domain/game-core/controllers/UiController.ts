@@ -1,6 +1,6 @@
-import { Game } from "./game";
+import { Game } from "../game";
 
-export class UI {
+export class UiController {
   game: Game;
   movesCounter: number = 0;
   collectedNumbers: number = 0;

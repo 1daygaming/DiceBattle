@@ -20,9 +20,9 @@
 <script lang="ts">
 import { ref, onMounted, defineComponent } from 'vue'
 import GameContainer from './components/GameContainer.vue'
-import { Game } from './js/game'
-import { UI } from "./js/ui";
-import {Direction} from "@/js/types";
+import { Direction } from './domain/game-core/types'
+import { Game } from './domain/game-core/game'
+import { UiController } from './domain/game-core/controllers/UiController'
 
 export default defineComponent({
   name: 'App',
@@ -47,7 +47,7 @@ export default defineComponent({
       game = new Game();
 
       // Создаем экземпляр UI
-      const ui = new UI(game);
+      const ui = new UiController(game);
 
       // Устанавливаем обработчик изменения количества собранных цифр
       game.setCollectedNumbersChangedHandler((count: number) => {

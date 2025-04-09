@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { Position } from './types';
-import { Board } from './board';
+import { Position } from '../types';
+import { BoardController } from './BoardController';
 
 interface FaceValues {
   top: number;
@@ -16,7 +16,7 @@ interface BoardSize {
   height: number;
 }
 
-export class Cube {
+export class CubeController {
   size: number;
   mesh: THREE.Mesh | null;
   position: Position;
@@ -34,9 +34,9 @@ export class Cube {
   teleporting: boolean;
   boardSize: { width: number; height: number };
   cellSize: number;
-  board: Board; // TODO: Replace with proper Board type
+  board: BoardController; // TODO: Replace with proper Board type
 
-  constructor(size = 1, boardSize: { width: number; height: number }, cellSize: number, board: Board) {
+  constructor(size = 1, boardSize: { width: number; height: number }, cellSize: number, board: BoardController) {
     this.size = size;
     this.mesh = null;
     this.position = { x: 0, y: 0 };

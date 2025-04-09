@@ -1,4 +1,4 @@
-import { Cube } from './cube';
+import { CubeController } from './CubeController';
 import { TeleportController } from './TeleportController';
 
 export class CollisionController {
@@ -8,7 +8,7 @@ export class CollisionController {
     this.teleportController = teleportController;
   }
 
-  public checkCubesCollision(playerCube: Cube, enemyCubes: Cube[]): void {
+  public checkCubesCollision(playerCube: CubeController, enemyCubes: CubeController[]): void {
     const playerPos = playerCube.position;
 
     for (const enemyCube of enemyCubes) {
@@ -48,7 +48,7 @@ export class CollisionController {
     }
   }
 
-  private teleportEnemyCube(enemyCube: Cube, playerCube: Cube, enemyCubes: Cube[]): void {
+  private teleportEnemyCube(enemyCube: CubeController, playerCube: CubeController, enemyCubes: CubeController[]): void {
     const allPositions = [
       playerCube.position,
       ...enemyCubes.map(cube => cube.position)
@@ -58,13 +58,13 @@ export class CollisionController {
     this.teleportController.animateTeleport(enemyCube, newPosition);
   }
 
-  private teleportPlayerCube(playerCube: Cube, enemyCubes: Cube[]): void {
+  private teleportPlayerCube(playerCube: CubeController, enemyCubes: CubeController[]): void {
     const allPositions = enemyCubes.map(cube => cube.position);
     const newPosition = this.getRandomFreePosition(allPositions);
     this.teleportController.animateTeleport(playerCube, newPosition);
   }
 
-  private teleportBothCubes(playerCube: Cube, enemyCube: Cube, enemyCubes: Cube[]): void {
+  private teleportBothCubes(playerCube: CubeController, enemyCube: CubeController, enemyCubes: CubeController[]): void {
     const otherPositions = enemyCubes
       .filter(cube => cube !== enemyCube)
       .map(cube => cube.position);

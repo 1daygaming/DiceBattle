@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { CameraState, Direction } from './types';
+import { CameraState, Direction } from '../types';
 
 export class CameraController {
   private camera: THREE.PerspectiveCamera;
@@ -9,7 +9,7 @@ export class CameraController {
   constructor(camera: THREE.PerspectiveCamera, boardSize: { width: number; height: number }, cellSize: number) {
     this.camera = camera;
     this.maxDimension = Math.max(boardSize.width, boardSize.height) * cellSize;
-    
+
     this.state = {
       angle: 225,
       targetAngle: 45,
