@@ -1,11 +1,32 @@
 import * as THREE from 'three';
 
+interface Cell {
+  mesh: THREE.Mesh;
+  type: 'normal' | 'target' | 'obstacle';
+  value: number | null;
+  obstacleMesh?: THREE.Mesh;
+}
+
+interface Position {
+  x: number;
+  y: number;
+  value?: number;
+}
+
 export class Board {
+  width: number;
+  height: number;
+  cellSize: number;
+  mesh: THREE.Group;
+  cells: Cell[][];
+  targetCells: Cell[];
+  obstacleCells: Cell[];
+
   constructor(width = 5, height = 5, cellSize = 1) {
     this.width = width;
     this.height = height;
     this.cellSize = cellSize;
-    this.mesh = null;
+    this.mesh = new THREE.Group();
     this.cells = [];
     this.targetCells = [];
     this.obstacleCells = [];
@@ -14,7 +35,7 @@ export class Board {
     this.setupObstacleCells();
   }
 
-  createMesh() {
+  createMesh(): void {
     // Создаем группу для всех элементов поля
     this.mesh = new THREE.Group();
     
@@ -64,7 +85,7 @@ export class Board {
     );
   }
 
-  setupTargetCells() {
+  setupTargetCells(): void {
     // Создаем материал для целевых ячеек с более ярким цветом
     const targetMaterial = new THREE.MeshStandardMaterial({
       color: 0x4a6572, // Более яркий цвет основы
@@ -81,7 +102,7 @@ export class Board {
     this.shuffleArray(values);
     
     // Создаем массив всех возможных позиций (исключая центр поля, где стартует кубик)
-    const allPositions = [];
+    const allPositions: Position[] = [];
     const centerX = Math.floor(this.width / 2);
     const centerY = Math.floor(this.height / 2);
     
@@ -98,7 +119,7 @@ export class Board {
     this.shuffleArray(allPositions);
     
     // Выбираем первые 6 позиций (или меньше, если поле маленькое)
-    const targetPositions = [];
+    const targetPositions: Position[] = [];
     const numTargets = Math.min(6, allPositions.length);
     
     for (let i = 0; i < numTargets; i++) {
@@ -111,24 +132,27 @@ export class Board {
     
     // Устанавливаем целевые ячейки
     for (const pos of targetPositions) {
-      const cell = this.cells[pos.y][pos.x];
-      cell.type = 'target';
-      cell.value = pos.value;
-      cell.mesh.material = targetMaterial.clone();
-      
-      // Добавляем текстуру с цифрой
-      const texture = this.createNumberTexture(pos.value);
-      cell.mesh.material.map = texture;
-      
-      // Сохраняем ссылку на целевую ячейку
-      this.targetCells.push(cell);
+      if (pos.value !== undefined) {
+        const cell = this.cells[pos.y][pos.x];
+        cell.type = 'target';
+        cell.value = pos.value;
+        cell.mesh.material = targetMaterial.clone();
+        
+        // Добавляем текстуру с цифрой
+        const texture = this.createNumberTexture(pos.value);
+        const material = cell.mesh.material as THREE.MeshStandardMaterial;
+        material.map = texture;
+        
+        // Сохраняем ссылку на целевую ячейку
+        this.targetCells.push(cell);
+      }
     }
     
     // Инициализируем подсветку целевых ячеек (подсвечиваем первую цифру)
     this.updateTargetCellsHighlight(1);
   }
 
-  setupObstacleCells(cubePosition = null) {
+  setupObstacleCells(cubePosition: Position | null = null): void {
     // Создаем материал для препятствий
     const obstacleMaterial = new THREE.MeshStandardMaterial({
       color: 0xC62828, // Красный цвет для препятствий
@@ -149,7 +173,7 @@ export class Board {
     const startPos = this.getStartPosition();
     
     // Получаем позиции целевых ячеек
-    const targetPositions = [];
+    const targetPositions: Position[] = [];
     for (const cell of this.targetCells) {
       for (let y = 0; y < this.height; y++) {
         for (let x = 0; x < this.width; x++) {
@@ -162,7 +186,7 @@ export class Board {
     }
     
     // Создаем массив всех возможных позиций для препятствий
-    const availablePositions = [];
+    const availablePositions: Position[] = [];
     
     for (let y = 0; y < this.height; y++) {
       for (let x = 0; x < this.width; x++) {
@@ -191,7 +215,7 @@ export class Board {
       if (cell.obstacleMesh) {
         this.mesh.remove(cell.obstacleMesh);
         cell.type = 'normal';
-        cell.obstacleMesh = null;
+        cell.obstacleMesh = undefined;
       }
     }
     
@@ -233,7 +257,7 @@ export class Board {
   }
 
   // Вспомогательный метод для перемешивания массива
-  shuffleArray(array) {
+  shuffleArray<T>(array: T[]): T[] {
     for (let i = array.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [array[i], array[j]] = [array[j], array[i]];
@@ -241,12 +265,16 @@ export class Board {
     return array;
   }
 
-  createNumberTexture(number) {
+  createNumberTexture(number: number): THREE.Texture {
     // Создаем канвас для отрисовки текстуры
     const canvas = document.createElement('canvas');
     canvas.width = 128;
     canvas.height = 128;
     const context = canvas.getContext('2d');
+    
+    if (!context) {
+      throw new Error('Could not get 2D context from canvas');
+    }
     
     // Заливаем прозрачным фоном
     context.clearRect(0, 0, canvas.width, canvas.height);
@@ -273,7 +301,7 @@ export class Board {
   }
 
   // Проверяем, является ли ячейка целевой и соответствует ли значение кубика
-  checkTargetCell(x, y, cubeValue) {
+  checkTargetCell(x: number, y: number, cubeValue: number): boolean {
     if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
       return false;
     }
@@ -283,7 +311,7 @@ export class Board {
   }
 
   // Получаем стартовую позицию (центр поля)
-  getStartPosition() {
+  getStartPosition(): Position {
     return {
       x: Math.floor(this.width / 2),
       y: Math.floor(this.height / 2)
@@ -291,7 +319,7 @@ export class Board {
   }
 
   // Преобразуем координаты поля в мировые координаты
-  gridToWorld(x, y) {
+  gridToWorld(x: number, y: number): { x: number; z: number } {
     return {
       x: (x - Math.floor(this.width / 2)) * this.cellSize,
       z: (y - Math.floor(this.height / 2)) * this.cellSize
@@ -299,7 +327,7 @@ export class Board {
   }
 
   // Получаем размер поля
-  getSize() {
+  getSize(): { width: number; height: number } {
     return {
       width: this.width,
       height: this.height
@@ -307,40 +335,42 @@ export class Board {
   }
 
   // Получаем количество целевых ячеек
-  getTargetCellsCount() {
+  getTargetCellsCount(): number {
     return this.targetCells.length;
   }
 
   // Обновляем подсветку целевых ячеек
-  updateTargetCellsHighlight(nextNumberToCollect) {
+  updateTargetCellsHighlight(nextNumberToCollect: number): void {
     // Проходим по всем целевым ячейкам
     for (const cell of this.targetCells) {
+      const material = cell.mesh.material as THREE.MeshStandardMaterial;
+      
       // Если значение ячейки меньше nextNumberToCollect, значит она уже собрана
-      if (cell.value < nextNumberToCollect - 1) {
+      if (cell.value && cell.value < nextNumberToCollect - 1) {
         // Подсвечиваем собранные ячейки ярко-зеленым цветом
-        cell.mesh.material.color.set(0x4CAF50);
-        cell.mesh.material.emissive.set(0x4CAF50);
-        cell.mesh.material.emissiveIntensity = 0.5;
+        material.color.set(0x4CAF50);
+        material.emissive.set(0x4CAF50);
+        material.emissiveIntensity = 0.5;
       } 
       // Если значение ячейки равно nextNumberToCollect, значит это текущая цель
       else if (cell.value === nextNumberToCollect - 1) {
         // Подсвечиваем текущую цель ярко-оранжевым цветом для лучшей видимости
-        cell.mesh.material.color.set(0xFF9800);
-        cell.mesh.material.emissive.set(0xFF9800);
-        cell.mesh.material.emissiveIntensity = 0.8; // Очень яркое свечение для текущей цели
+        material.color.set(0xFF9800);
+        material.emissive.set(0xFF9800);
+        material.emissiveIntensity = 0.8; // Очень яркое свечение для текущей цели
       }
       // Иначе это будущие цели
       else {
         // Делаем будущие цели более заметными с голубым оттенком
-        cell.mesh.material.color.set(0x03A9F4);
-        cell.mesh.material.emissive.set(0x03A9F4);
-        cell.mesh.material.emissiveIntensity = 0.3;
+        material.color.set(0x03A9F4);
+        material.emissive.set(0x03A9F4);
+        material.emissiveIntensity = 0.3;
       }
     }
   }
 
   // Добавляем метод для проверки, является ли ячейка препятствием
-  isObstacle(x, y) {
+  isObstacle(x: number, y: number): boolean {
     // Проверяем, что координаты в пределах поля
     if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
       return false;
@@ -357,4 +387,4 @@ export class Board {
     
     return isObstacle;
   }
-}
+} 

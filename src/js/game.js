@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Board } from './board.js';
+import { Board } from './board';
 import { Cube } from './cube.js';
 
 export class Game {
