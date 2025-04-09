@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { TeleportEffect, Position } from './types';
-import { Cube } from './cube';
+import {Position, TeleportEffect} from './types';
+import {Cube} from './cube';
 
 export class TeleportController {
   private scene: THREE.Scene;
@@ -41,7 +41,6 @@ export class TeleportController {
       if (!cube.mesh) return;
       
       if (frame >= animationDuration) {
-        const oldPosition = cube.position;
         cube.reset(newPosition);
 
         cube.mesh.position.set(
@@ -60,9 +59,7 @@ export class TeleportController {
       if (progress < 0.5) {
         const upProgress = progress * 2;
         const heightFactor = Math.sin(upProgress * Math.PI / 2);
-        const currentHeight = this.cellSize / 2 + teleportHeight * heightFactor;
-
-        cube.mesh.position.y = currentHeight;
+        cube.mesh.position.y = this.cellSize / 2 + teleportHeight * heightFactor;
         cube.mesh.rotation.x = initialRotation.x + upProgress * Math.PI * 2;
         cube.mesh.rotation.y = initialRotation.y + upProgress * Math.PI * 4;
         cube.mesh.rotation.z = initialRotation.z + upProgress * Math.PI * 2;
@@ -80,10 +77,10 @@ export class TeleportController {
           currentZ
         );
 
-        const rotationSlowdown = 1 - downProgress;
-        cube.mesh.rotation.x = initialRotation.x + (1 + downProgress) * Math.PI * 2;
-        cube.mesh.rotation.y = initialRotation.y + (1 + downProgress) * Math.PI * 4;
-        cube.mesh.rotation.z = initialRotation.z + (1 + downProgress) * Math.PI * 2;
+        const rotationSlowdown = 1 + downProgress;
+        cube.mesh.rotation.x = initialRotation.x + (rotationSlowdown) * Math.PI * 2;
+        cube.mesh.rotation.y = initialRotation.y + (rotationSlowdown) * Math.PI * 4;
+        cube.mesh.rotation.z = initialRotation.z + (rotationSlowdown) * Math.PI * 2;
       }
 
       frame++;

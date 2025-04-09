@@ -1,13 +1,12 @@
 import * as THREE from 'three';
-import { Board } from './board';
-import { Cube } from './cube';
-import { CameraController } from './CameraController';
-import { TeleportController } from './TeleportController';
-import { AIController } from './AIController';
-import { CollisionController } from './CollisionController';
-import { DebugController } from './DebugController';
-import { GameConfig, GameState, Direction } from './types';
-import { UI } from './ui';
+import {Board} from './board';
+import {Cube} from './cube';
+import {CameraController} from './CameraController';
+import {TeleportController} from './TeleportController';
+import {AIController} from './AIController';
+import {CollisionController} from './CollisionController';
+import {DebugController} from './DebugController';
+import {Direction, GameConfig, GameState} from './types';
 
 export class Game {
   private config: GameConfig;
@@ -77,10 +76,6 @@ export class Game {
 
   private setupCamera(): void {
     if (!this.camera) return;
-
-    const boardWidth = this.config.boardSize.width * this.config.cellSize;
-    const boardHeight = this.config.boardSize.height * this.config.cellSize;
-    const maxDimension = Math.max(boardWidth, boardHeight);
 
     this.camera.fov = 45;
     this.camera.updateProjectionMatrix();
@@ -160,8 +155,7 @@ export class Game {
   private onWindowResize(): void {
     if (!this.camera || !this.renderer) return;
 
-    const aspect = window.innerWidth / window.innerHeight;
-    this.camera.aspect = aspect;
+    this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
   }

@@ -145,40 +145,6 @@ export class UI {
       this.obstacleInfoElement.style.display = 'none';
     }
   }
-
-  updateCollectedNumbers(count: number) {
-    this.updateCounters();
-    
-    // Если собраны все цифры, показываем экран победы
-    //this.collectedNumbers === this.totalTargetNumbers
-    //  this.showEndScreen();
-  }
-
-  showStartScreen() {
-    // Показываем стартовый экран без правил
-    if (this.gameStartScreen && this.gameEndScreen) {
-      this.gameStartScreen.classList.remove('hidden');
-      this.gameEndScreen.classList.add('hidden');
-    }
-    
-    // Скрываем индикатор следующей цифры на стартовом экране
-    if (this.nextNumberElement) {
-      this.nextNumberElement.style.display = 'none';
-    }
-    
-    // Скрываем информацию о смене препятствий на стартовом экране
-    this.obstacleInfoElement.style.display = 'none';
-  }
-
-  hideStartScreen() {
-    if (this.gameStartScreen) {
-      this.gameStartScreen.classList.add('hidden');
-    }
-    
-    // Показываем индикатор следующей цифры при начале игры
-    this.updateCounters();
-  }
-
   showEndScreen() {
     if (this.totalMovesElement && this.gameEndScreen) {
       this.totalMovesElement.textContent = '0'; //this.movesCounter.toString();
