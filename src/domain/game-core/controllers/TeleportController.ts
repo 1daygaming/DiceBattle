@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import {Position, TeleportEffect} from '../types';
-import {CubeController} from './CubeController';
+import { Position, TeleportEffect } from '../types';
+import { CubeController } from './CubeController';
 
 export class TeleportController {
   private scene: THREE.Scene;
@@ -16,14 +16,20 @@ export class TeleportController {
 
   public animateTeleport(cube: CubeController, newPosition: Position): void {
     if (!cube.mesh) return;
-    
+
     cube.teleporting = true;
 
     const currentWorldX = cube.mesh.position.x;
     const currentWorldZ = cube.mesh.position.z;
 
-    const targetWorldX = newPosition.x * this.cellSize - (this.boardSize.width * this.cellSize) / 2 + this.cellSize / 2;
-    const targetWorldZ = newPosition.y * this.cellSize - (this.boardSize.height * this.cellSize) / 2 + this.cellSize / 2;
+    const targetWorldX =
+      newPosition.x * this.cellSize -
+      (this.boardSize.width * this.cellSize) / 2 +
+      this.cellSize / 2;
+    const targetWorldZ =
+      newPosition.y * this.cellSize -
+      (this.boardSize.height * this.cellSize) / 2 +
+      this.cellSize / 2;
 
     const teleportHeight = 10;
     const animationDuration = 60;
@@ -32,22 +38,18 @@ export class TeleportController {
     const initialRotation = {
       x: cube.mesh.rotation.x,
       y: cube.mesh.rotation.y,
-      z: cube.mesh.rotation.z
+      z: cube.mesh.rotation.z,
     };
 
     this.createTeleportEffect(currentWorldX, this.cellSize / 2, currentWorldZ, 0x00ffff);
 
     const updateTeleportAnimation = () => {
       if (!cube.mesh) return;
-      
+
       if (frame >= animationDuration) {
         cube.reset(newPosition);
 
-        cube.mesh.position.set(
-          targetWorldX,
-          this.cellSize / 2,
-          targetWorldZ
-        );
+        cube.mesh.position.set(targetWorldX, this.cellSize / 2, targetWorldZ);
 
         cube.teleporting = false;
         this.createTeleportEffect(targetWorldX, this.cellSize / 2, targetWorldZ, 0x00ffff);
@@ -58,29 +60,25 @@ export class TeleportController {
 
       if (progress < 0.5) {
         const upProgress = progress * 2;
-        const heightFactor = Math.sin(upProgress * Math.PI / 2);
+        const heightFactor = Math.sin((upProgress * Math.PI) / 2);
         cube.mesh.position.y = this.cellSize / 2 + teleportHeight * heightFactor;
         cube.mesh.rotation.x = initialRotation.x + upProgress * Math.PI * 2;
         cube.mesh.rotation.y = initialRotation.y + upProgress * Math.PI * 4;
         cube.mesh.rotation.z = initialRotation.z + upProgress * Math.PI * 2;
       } else {
         const downProgress = (progress - 0.5) * 2;
-        const heightFactor = Math.cos(downProgress * Math.PI / 2);
+        const heightFactor = Math.cos((downProgress * Math.PI) / 2);
         const currentHeight = this.cellSize / 2 + teleportHeight * heightFactor;
 
         const currentX = currentWorldX + (targetWorldX - currentWorldX) * downProgress;
         const currentZ = currentWorldZ + (targetWorldZ - currentWorldZ) * downProgress;
 
-        cube.mesh.position.set(
-          currentX,
-          currentHeight,
-          currentZ
-        );
+        cube.mesh.position.set(currentX, currentHeight, currentZ);
 
         const rotationSlowdown = 1 + downProgress;
-        cube.mesh.rotation.x = initialRotation.x + (rotationSlowdown) * Math.PI * 2;
-        cube.mesh.rotation.y = initialRotation.y + (rotationSlowdown) * Math.PI * 4;
-        cube.mesh.rotation.z = initialRotation.z + (rotationSlowdown) * Math.PI * 2;
+        cube.mesh.rotation.x = initialRotation.x + rotationSlowdown * Math.PI * 2;
+        cube.mesh.rotation.y = initialRotation.y + rotationSlowdown * Math.PI * 4;
+        cube.mesh.rotation.z = initialRotation.z + rotationSlowdown * Math.PI * 2;
       }
 
       frame++;
@@ -108,7 +106,7 @@ export class TeleportController {
       velocities.push({
         x: (Math.random() - 0.5) * 0.2,
         y: Math.random() * 0.2 + 0.1,
-        z: (Math.random() - 0.5) * 0.2
+        z: (Math.random() - 0.5) * 0.2,
       });
 
       sizes[i] = Math.random() * 0.2 + 0.1;
@@ -123,7 +121,7 @@ export class TeleportController {
       transparent: true,
       opacity: 0.8,
       blending: THREE.AdditiveBlending,
-      sizeAttenuation: true
+      sizeAttenuation: true,
     });
 
     const particles = new THREE.Points(particleGeometry, particleMaterial);
@@ -134,7 +132,7 @@ export class TeleportController {
       positions,
       velocities,
       lifetime: 0,
-      maxLifetime: 60
+      maxLifetime: 60,
     };
 
     this.effects.push(effect);
@@ -165,4 +163,4 @@ export class TeleportController {
       effect.particles.geometry.attributes.position.needsUpdate = true;
     }
   }
-} 
+}

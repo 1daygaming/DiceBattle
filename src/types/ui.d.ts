@@ -35,4 +35,4 @@ export interface UI {
   createCameraControls(): void;
   updateScore(playerWins?: number, enemyWins?: number): void;
   updateObstacleInfo(movesLeft: number): void;
-} 
+}

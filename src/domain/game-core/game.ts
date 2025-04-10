@@ -1,12 +1,12 @@
 import * as THREE from 'three';
 import { Direction, GameConfig, GameState } from './types';
-import { BoardController } from "@/domain/game-core/controllers/BoardController";
-import { CubeController } from "@/domain/game-core/controllers/CubeController";
-import { TeleportController } from "@/domain/game-core/controllers/TeleportController";
-import { CameraController } from "@/domain/game-core/controllers/CameraController";
-import { AIController } from "@/domain/game-core/controllers/AIController";
-import { CollisionController } from "@/domain/game-core/controllers/CollisionController";
-import { DebugController } from "@/domain/game-core/controllers/DebugController";
+import { BoardController } from '@/domain/game-core/controllers/BoardController';
+import { CubeController } from '@/domain/game-core/controllers/CubeController';
+import { TeleportController } from '@/domain/game-core/controllers/TeleportController';
+import { CameraController } from '@/domain/game-core/controllers/CameraController';
+import { AIController } from '@/domain/game-core/controllers/AIController';
+import { CollisionController } from '@/domain/game-core/controllers/CollisionController';
+import { DebugController } from '@/domain/game-core/controllers/DebugController';
 export class Game {
   public state: GameState;
   public cameraController: CameraController | null = null;
@@ -28,7 +28,7 @@ export class Game {
   constructor(config: GameConfig = { boardSize: { width: 10, height: 10 }, cellSize: 1 }) {
     this.config = {
       boardSize: config.boardSize || { width: 10, height: 10 },
-      cellSize: config.cellSize || 1
+      cellSize: config.cellSize || 1,
     };
 
     this.state = {
@@ -37,7 +37,7 @@ export class Game {
       moveCount: 0,
       nextObstacleChange: this.getRandomObstacleChangeInterval(),
       playerWins: 0,
-      enemyWins: 0
+      enemyWins: 0,
     };
   }
 
@@ -63,11 +63,25 @@ export class Game {
   private createGameObjects(): void {
     if (!this.scene) return;
 
-    this.boardController = new BoardController(this.config.boardSize.width, this.config.boardSize.height, this.config.cellSize);
-    this.currentUserCubeController = new CubeController(this.config.cellSize, this.config.boardSize, this.config.cellSize, this.boardController);
+    this.boardController = new BoardController(
+      this.config.boardSize.width,
+      this.config.boardSize.height,
+      this.config.cellSize
+    );
+    this.currentUserCubeController = new CubeController(
+      this.config.cellSize,
+      this.config.boardSize,
+      this.config.cellSize,
+      this.boardController
+    );
 
     for (let i = 0; i < 3; i++) {
-      const enemyCube = new CubeController(this.config.cellSize, this.config.boardSize, this.config.cellSize, this.boardController);
+      const enemyCube = new CubeController(
+        this.config.cellSize,
+        this.config.boardSize,
+        this.config.cellSize,
+        this.boardController
+      );
       enemyCube.setColor(0xff0000);
       this.enemyCubes.push(enemyCube);
     }
@@ -79,7 +93,11 @@ export class Game {
     this.camera.fov = 45;
     this.camera.updateProjectionMatrix();
 
-    this.cameraController = new CameraController(this.camera, this.config.boardSize, this.config.cellSize);
+    this.cameraController = new CameraController(
+      this.camera,
+      this.config.boardSize,
+      this.config.cellSize
+    );
     this.cameraController.updatePosition();
   }
 
@@ -108,7 +126,13 @@ export class Game {
   }
 
   private addObjectsToScene(): void {
-    if (!this.scene || !this.boardController || !this.currentUserCubeController || !this.currentUserCubeController.mesh) return;
+    if (
+      !this.scene ||
+      !this.boardController ||
+      !this.currentUserCubeController ||
+      !this.currentUserCubeController.mesh
+    )
+      return;
 
     this.scene.add(this.boardController.mesh);
     this.currentUserCubeController.setScene(this.scene);
@@ -140,10 +164,14 @@ export class Game {
   private setupControllers(): void {
     if (!this.scene || !this.cameraController) return;
 
-    this.teleportController = new TeleportController(this.scene, this.config.boardSize, this.config.cellSize);
+    this.teleportController = new TeleportController(
+      this.scene,
+      this.config.boardSize,
+      this.config.cellSize
+    );
     this.aiController = new AIController(this.cameraController);
     this.collisionController = new CollisionController(this.teleportController);
-    this.debugController = import.meta.env.DEV ? new DebugController(this.scene) : null
+    this.debugController = import.meta.env.DEV ? new DebugController(this.scene) : null;
     this.debugController?.init(this.config.boardSize, this.config.cellSize);
   }
 
@@ -165,10 +193,12 @@ export class Game {
   }
 
   isCubeRotating() {
-    return this.currentUserCubeController?.rotationInProgress ||
+    return (
+      this.currentUserCubeController?.rotationInProgress ||
       this.currentUserCubeController?.teleporting ||
       this.enemyCubes.some(cube => cube.rotationInProgress) ||
-      this.enemyCubes.some(cube => cube.teleporting);
+      this.enemyCubes.some(cube => cube.teleporting)
+    );
   }
 
   public reset(): void {
@@ -181,15 +211,21 @@ export class Game {
     const startPosition = this.boardController.getStartPosition();
     this.currentUserCubeController.reset(startPosition);
 
-    const worldX = startPosition.x * this.config.cellSize - (this.config.boardSize.width * this.config.cellSize) / 2 + this.config.cellSize / 2;
-    const worldZ = startPosition.y * this.config.cellSize - (this.config.boardSize.height * this.config.cellSize) / 2 + this.config.cellSize / 2;
+    const worldX =
+      startPosition.x * this.config.cellSize -
+      (this.config.boardSize.width * this.config.cellSize) / 2 +
+      this.config.cellSize / 2;
+    const worldZ =
+      startPosition.y * this.config.cellSize -
+      (this.config.boardSize.height * this.config.cellSize) / 2 +
+      this.config.cellSize / 2;
 
     if (this.currentUserCubeController.mesh) {
       this.currentUserCubeController.mesh.position.set(worldX, this.config.cellSize / 2, worldZ);
       this.currentUserCubeController.mesh.rotation.set(0, 0, 0);
     }
 
-    let occupiedPositions = [startPosition];
+    const occupiedPositions = [startPosition];
 
     for (const enemyCube of this.enemyCubes) {
       const enemyPosition = this.getRandomFreePosition(occupiedPositions);
@@ -197,8 +233,14 @@ export class Game {
       occupiedPositions.push(enemyPosition);
 
       if (enemyCube.mesh) {
-        const enemyWorldX = enemyPosition.x * this.config.cellSize - (this.config.boardSize.width * this.config.cellSize) / 2 + this.config.cellSize / 2;
-        const enemyWorldZ = enemyPosition.y * this.config.cellSize - (this.config.boardSize.height * this.config.cellSize) / 2 + this.config.cellSize / 2;
+        const enemyWorldX =
+          enemyPosition.x * this.config.cellSize -
+          (this.config.boardSize.width * this.config.cellSize) / 2 +
+          this.config.cellSize / 2;
+        const enemyWorldZ =
+          enemyPosition.y * this.config.cellSize -
+          (this.config.boardSize.height * this.config.cellSize) / 2 +
+          this.config.cellSize / 2;
 
         enemyCube.mesh.position.set(enemyWorldX, this.config.cellSize / 2, enemyWorldZ);
         enemyCube.mesh.rotation.set(0, 0, 0);
@@ -210,7 +252,16 @@ export class Game {
   }
 
   public animate(): void {
-    if (!this.scene || !this.camera || !this.renderer || !this.currentUserCubeController || !this.cameraController || !this.collisionController || !this.debugController) return;
+    if (
+      !this.scene ||
+      !this.camera ||
+      !this.renderer ||
+      !this.currentUserCubeController ||
+      !this.cameraController ||
+      !this.collisionController ||
+      !this.debugController
+    )
+      return;
 
     requestAnimationFrame(() => this.animate());
 
@@ -223,20 +274,34 @@ export class Game {
     }
 
     if (this.state.active) {
-      const playerRotationCompleted = this.currentUserCubeController.update(this.config.boardSize, this.config.cellSize);
+      const playerRotationCompleted = this.currentUserCubeController.update(
+        this.config.boardSize,
+        this.config.cellSize
+      );
 
       const enemyRotationsCompleted = this.enemyCubes.map(enemyCube =>
         enemyCube.update(this.config.boardSize, this.config.cellSize)
       );
 
-      const allEnemyCubesReady = enemyRotationsCompleted.every(completed => completed !== false) &&
+      const allEnemyCubesReady =
+        enemyRotationsCompleted.every(completed => completed !== false) &&
         this.enemyCubes.every(enemyCube => !enemyCube.teleporting);
 
-      if (playerRotationCompleted && !this.currentUserCubeController.teleporting && allEnemyCubesReady) {
+      if (
+        playerRotationCompleted &&
+        !this.currentUserCubeController.teleporting &&
+        allEnemyCubesReady
+      ) {
         this.checkTargetCell();
 
-        if (!this.currentUserCubeController.rotationInProgress && this.enemyCubes.every(enemyCube => !enemyCube.rotationInProgress)) {
-          this.collisionController.checkCubesCollision(this.currentUserCubeController, this.enemyCubes);
+        if (
+          !this.currentUserCubeController.rotationInProgress &&
+          this.enemyCubes.every(enemyCube => !enemyCube.rotationInProgress)
+        ) {
+          this.collisionController.checkCubesCollision(
+            this.currentUserCubeController,
+            this.enemyCubes
+          );
 
           if (this.rotationCompletedHandler) {
             this.rotationCompletedHandler();
@@ -244,7 +309,11 @@ export class Game {
         }
       }
 
-      this.debugController.updateCubePositionHelper(this.currentUserCubeController, this.config.cellSize, this.config.boardSize);
+      this.debugController.updateCubePositionHelper(
+        this.currentUserCubeController,
+        this.config.cellSize,
+        this.config.boardSize
+      );
     }
 
     this.debugController.updateDebugInfo(this.currentUserCubeController);
@@ -252,29 +321,67 @@ export class Game {
   }
 
   public moveCube(direction: Direction): boolean {
-    if (!this.state.active || !this.currentUserCubeController || !this.cameraController || !this.aiController) return false;
+    if (
+      !this.state.active ||
+      !this.currentUserCubeController ||
+      !this.cameraController ||
+      !this.aiController
+    )
+      return false;
 
-    if (this.currentUserCubeController.rotationInProgress ||
+    if (
+      this.currentUserCubeController.rotationInProgress ||
       this.enemyCubes.some(enemyCube => enemyCube.rotationInProgress) ||
       this.currentUserCubeController.teleporting ||
-      this.enemyCubes.some(enemyCube => enemyCube.teleporting)) return false;
+      this.enemyCubes.some(enemyCube => enemyCube.teleporting)
+    )
+      return false;
 
     const transformedDirection = this.cameraController.transformDirectionByCamera(direction);
 
-    if (!this.currentUserCubeController.canRotate(transformedDirection, this.config.boardSize, this.config.cellSize, this.boardController)) {
+    if (
+      !this.currentUserCubeController.canRotate(
+        transformedDirection,
+        this.config.boardSize,
+        this.config.cellSize,
+        this.boardController
+      )
+    ) {
       return false;
     }
 
-    this.currentUserCubeController.startRotation(transformedDirection, this.config.boardSize, this.config.cellSize, this.boardController);
+    this.currentUserCubeController.startRotation(
+      transformedDirection,
+      this.config.boardSize,
+      this.config.cellSize,
+      this.boardController
+    );
 
     for (const enemyCube of this.enemyCubes) {
-      const enemyDirection = this.aiController.getAiMoveDirection(enemyCube, this.currentUserCubeController, this.enemyCubes);
+      const enemyDirection = this.aiController.getAiMoveDirection(
+        enemyCube,
+        this.currentUserCubeController,
+        this.enemyCubes
+      );
 
       if (enemyDirection) {
-        const transformedEnemyDirection = this.cameraController.transformDirectionByCamera(enemyDirection);
+        const transformedEnemyDirection =
+          this.cameraController.transformDirectionByCamera(enemyDirection);
 
-        if (enemyCube.canRotate(transformedEnemyDirection, this.config.boardSize, this.config.cellSize, this.boardController)) {
-          enemyCube.startRotation(transformedEnemyDirection, this.config.boardSize, this.config.cellSize, this.boardController);
+        if (
+          enemyCube.canRotate(
+            transformedEnemyDirection,
+            this.config.boardSize,
+            this.config.cellSize,
+            this.boardController
+          )
+        ) {
+          enemyCube.startRotation(
+            transformedEnemyDirection,
+            this.config.boardSize,
+            this.config.cellSize,
+            this.boardController
+          );
         }
       }
     }
@@ -295,7 +402,10 @@ export class Game {
     const bottomValue = this.currentUserCubeController.getBottomValue();
     const nextNumberToCollect = this.state.collectedNumbers.size + 1;
 
-    if (this.boardController.checkTargetCell(x, y, bottomValue) && bottomValue === nextNumberToCollect) {
+    if (
+      this.boardController.checkTargetCell(x, y, bottomValue) &&
+      bottomValue === nextNumberToCollect
+    ) {
       this.state.collectedNumbers.add(bottomValue);
       this.boardController.updateTargetCellsHighlight(nextNumberToCollect + 1);
 
@@ -325,7 +435,10 @@ export class Game {
     this.state.moveCount = 0;
   }
 
-  private getRandomFreePosition(excludePositions: { x: number; y: number }[]): { x: number; y: number } {
+  private getRandomFreePosition(excludePositions: { x: number; y: number }[]): {
+    x: number;
+    y: number;
+  } {
     const allPositions: { x: number; y: number }[] = [];
 
     for (let y = 0; y < this.config.boardSize.height; y++) {
@@ -361,4 +474,4 @@ export class Game {
   setGameCompletedHandler(handler: () => void): void {
     this.onGameCompleted = handler;
   }
-} 
+}

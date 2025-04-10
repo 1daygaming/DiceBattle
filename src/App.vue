@@ -1,21 +1,31 @@
 <template>
   <div id="app">
-    <game-container :moves="movesCounter" :collected-numbers="collectedNumbers"
-      :total-target-numbers="totalTargetNumbers" :next-number="nextNumber" :obstacle-info="obstacleInfo || 0"
-      @move="handleMove" @camera-rotate="handleCameraRotation" @camera-height="handleCameraHeight"
+    <game-container
+      :moves="movesCounter"
+      :collected-numbers="collectedNumbers"
+      :total-target-numbers="totalTargetNumbers"
+      :next-number="nextNumber"
+      :obstacle-info="obstacleInfo || 0"
+      @move="handleMove"
+      @camera-rotate="handleCameraRotation"
+      @camera-height="handleCameraHeight"
       @debug-toggle="toggleDebugHelpers" />
-    <div id="game-start" class="game-screen" v-if="!gameStarted">
+    <div v-if="!gameStarted" id="game-start" class="game-screen">
       <h1>Stacker</h1>
       <p>Перекатывайте кубик и собирайте цифры от 1 до 6 в правильном порядке!</p>
       <button @click="startGame">Начать игру</button>
     </div>
-    <div id="game-end" class="game-screen" v-if="gameEnded">
+    <div v-if="gameEnded" id="game-end" class="game-screen">
       <h1>Победа!</h1>
       <p>Вы собрали все цифры за <span>{{ movesCounter }}</span> ходов!</p>
+
+      
       <button @click="restartGame">Играть снова</button>
     </div>
   </div>
 </template>
+
+
 
 <script lang="ts">
 import { ref, onMounted, defineComponent } from 'vue'
@@ -47,7 +57,7 @@ export default defineComponent({
       game = new Game();
 
       // Создаем экземпляр UI
-      const ui = new UiController(game);
+      new UiController(game);
 
       // Устанавливаем обработчик изменения количества собранных цифр
       game.setCollectedNumbersChangedHandler((count: number) => {

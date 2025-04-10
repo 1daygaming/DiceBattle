@@ -12,7 +12,7 @@ export class DebugController {
     this.debugHelpers = {
       enabled: true,
       axesHelper: null,
-      gridHelper: null
+      gridHelper: null,
     };
   }
 
@@ -80,7 +80,11 @@ export class DebugController {
     }
   }
 
-  public updateCubePositionHelper(cube: CubeController, cellSize: number, boardSize: { width: number; height: number }): void {
+  public updateCubePositionHelper(
+    cube: CubeController,
+    cellSize: number,
+    boardSize: { width: number; height: number }
+  ): void {
     if (!this.cubePositionHelper) return;
 
     const worldX = cube.position.x * cellSize - (boardSize.width * cellSize) / 2 + cellSize / 2;
@@ -126,4 +130,4 @@ export class DebugController {
       }
     }
   }
-} 
+}

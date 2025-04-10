@@ -9,63 +9,75 @@ export class AIController {
     this.cameraController = cameraController;
   }
 
-  public getPossibleMoveDirections(enemyCube: CubeController, otherEnemyCubes: CubeController[]): Direction[] {
+  public getPossibleMoveDirections(
+    enemyCube: CubeController,
+    otherEnemyCubes: CubeController[]
+  ): Direction[] {
     const directions: Direction[] = ['up', 'down', 'left', 'right'];
     const possibleDirections: Direction[] = [];
-    
+
     const otherEnemyPositions = otherEnemyCubes
       .filter(cube => cube !== enemyCube)
       .map(cube => cube.position);
-    
+
     for (const direction of directions) {
       const transformedDirection = this.cameraController.transformDirectionByCamera(direction);
-      
-      if (enemyCube.canRotate(transformedDirection, enemyCube.boardSize, enemyCube.cellSize, enemyCube.board)) {
+
+      if (
+        enemyCube.canRotate(
+          transformedDirection,
+          enemyCube.boardSize,
+          enemyCube.cellSize,
+          enemyCube.board
+        )
+      ) {
         const newPosition = this.getNewPosition(enemyCube.position, direction);
-        
+
         const willCollideWithEnemy = otherEnemyPositions.some(
           pos => pos.x === newPosition.x && pos.y === newPosition.y
         );
-        
+
         if (!willCollideWithEnemy) {
           possibleDirections.push(direction);
         }
       }
     }
-    
+
     return possibleDirections;
   }
 
-  public getAiMoveDirection(enemyCube: CubeController, playerCube: CubeController, otherEnemyCubes: CubeController[]): Direction | null {
+  public getAiMoveDirection(
+    enemyCube: CubeController,
+    playerCube: CubeController,
+    otherEnemyCubes: CubeController[]
+  ): Direction | null {
     const possibleDirections = this.getPossibleMoveDirections(enemyCube, otherEnemyCubes);
-    
+
     if (possibleDirections.length === 0) {
       return null;
     }
-    
+
     const playerPos = playerCube.position;
     const enemyPos = enemyCube.position;
-    
+
     const enemyTopValue = enemyCube.getTopValue();
     const playerTopValue = playerCube.getTopValue();
-    
-    const isNearby = (
+
+    const isNearby =
       (Math.abs(playerPos.x - enemyPos.x) <= 2 && playerPos.y === enemyPos.y) ||
-      (Math.abs(playerPos.y - enemyPos.y) <= 2 && playerPos.x === enemyPos.x)
-    );
-    
+      (Math.abs(playerPos.y - enemyPos.y) <= 2 && playerPos.x === enemyPos.x);
+
     if (isNearby) {
       if (enemyTopValue > playerTopValue) {
         for (const direction of possibleDirections) {
           const newEnemyPos = this.getNewPosition(enemyPos, direction);
-          
-          const willBeAdjacent = (
+
+          const willBeAdjacent =
             (Math.abs(playerPos.x - newEnemyPos.x) === 1 && playerPos.y === newEnemyPos.y) ||
-            (Math.abs(playerPos.y - newEnemyPos.y) === 1 && playerPos.x === newEnemyPos.x)
-          );
-          
-          const willBeSameCell = (playerPos.x === newEnemyPos.x && playerPos.y === newEnemyPos.y);
-          
+            (Math.abs(playerPos.y - newEnemyPos.y) === 1 && playerPos.x === newEnemyPos.x);
+
+          const willBeSameCell = playerPos.x === newEnemyPos.x && playerPos.y === newEnemyPos.y;
+
           if (willBeAdjacent || willBeSameCell) {
             return direction;
           }
@@ -73,14 +85,16 @@ export class AIController {
       } else if (enemyTopValue < playerTopValue) {
         for (const direction of possibleDirections) {
           const newEnemyPos = this.getNewPosition(enemyPos, direction);
-          
+
           if (playerPos.x === newEnemyPos.x && playerPos.y === newEnemyPos.y) {
             continue;
           }
-          
-          const currentDistance = Math.abs(playerPos.x - enemyPos.x) + Math.abs(playerPos.y - enemyPos.y);
-          const newDistance = Math.abs(playerPos.x - newEnemyPos.x) + Math.abs(playerPos.y - newEnemyPos.y);
-          
+
+          const currentDistance =
+            Math.abs(playerPos.x - enemyPos.x) + Math.abs(playerPos.y - enemyPos.y);
+          const newDistance =
+            Math.abs(playerPos.x - newEnemyPos.x) + Math.abs(playerPos.y - newEnemyPos.y);
+
           if (newDistance > currentDistance) {
             return direction;
           }
@@ -90,14 +104,14 @@ export class AIController {
           const newEnemyPos = this.getNewPosition(enemyPos, direction);
           return !(playerPos.x === newEnemyPos.x && playerPos.y === newEnemyPos.y);
         });
-        
+
         if (safeDirections.length > 0) {
           const randomIndex = Math.floor(Math.random() * safeDirections.length);
           return safeDirections[randomIndex];
         }
       }
     }
-    
+
     const randomIndex = Math.floor(Math.random() * possibleDirections.length);
     return possibleDirections[randomIndex];
   }
@@ -122,4 +136,4 @@ export class AIController {
 
     return newPosition;
   }
-} 
+}

@@ -46,4 +46,4 @@ export interface CameraState {
   distance: number;
 }
 
-export type Direction = 'up' | 'down' | 'left' | 'right'; 
+export type Direction = 'up' | 'down' | 'left' | 'right';

@@ -128,4 +128,4 @@ declare namespace THREE {
 
   const AdditiveBlending: number;
   const PCFSoftShadowMap: number;
-} 
+}

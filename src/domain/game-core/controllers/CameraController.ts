@@ -6,7 +6,11 @@ export class CameraController {
   private state: CameraState;
   private maxDimension = 0;
 
-  constructor(camera: THREE.PerspectiveCamera, boardSize: { width: number; height: number }, cellSize: number) {
+  constructor(
+    camera: THREE.PerspectiveCamera,
+    boardSize: { width: number; height: number },
+    cellSize: number
+  ) {
     this.camera = camera;
     this.maxDimension = Math.max(boardSize.width, boardSize.height) * cellSize;
 
@@ -15,7 +19,7 @@ export class CameraController {
       targetAngle: 45,
       isAnimating: false,
       height: this.maxDimension * 1.5,
-      distance: this.maxDimension * 2.5
+      distance: this.maxDimension * 2.5,
     };
   }
 
@@ -61,49 +65,36 @@ export class CameraController {
   }
 
   public transformDirectionByCamera(direction: Direction): Direction {
-    const normalizedAngle = (this.state.angle % 360 + 360) % 360;
-    const sector = Math.floor((normalizedAngle + 45) / 90) % 4;
+    const directions: Direction[] = ['up', 'right', 'down', 'left'];
+    const index = directions.indexOf(direction);
 
-    switch (sector) {
-      case 0:
-        return direction;
-      case 1:
-        switch (direction) {
-          case 'up': return 'right';
-          case 'right': return 'down';
-          case 'down': return 'left';
-          case 'left': return 'up';
-        }
-      case 2:
-        switch (direction) {
-          case 'up': return 'down';
-          case 'right': return 'left';
-          case 'down': return 'up';
-          case 'left': return 'right';
-        }
-      case 3:
-        switch (direction) {
-          case 'up': return 'left';
-          case 'right': return 'up';
-          case 'down': return 'right';
-          case 'left': return 'down';
-        }
-      default:
-        return direction;
-    }
+    if (index === -1) return direction; // fallback safety
+
+    const normalizedAngle = ((this.state.angle % 360) + 360) % 360;
+    const rotation = Math.floor((normalizedAngle + 45) / 90) % 4;
+
+    const newIndex = (index + rotation) % 4;
+    return directions[newIndex];
   }
 
+
   public increaseHeight(): void {
-    this.state.height = Math.min(this.state.height + this.maxDimension * 0.15, this.maxDimension * 3);
+    this.state.height = Math.min(
+      this.state.height + this.maxDimension * 0.15,
+      this.maxDimension * 3
+    );
     this.updatePosition();
   }
 
   public decreaseHeight(): void {
-    this.state.height = Math.max(this.state.height - this.maxDimension * 0.15, this.maxDimension * 0.8);
+    this.state.height = Math.max(
+      this.state.height - this.maxDimension * 0.15,
+      this.maxDimension * 0.8
+    );
     this.updatePosition();
   }
 
   public get isAnimating(): boolean {
     return this.state.isAnimating;
   }
-} 
+}

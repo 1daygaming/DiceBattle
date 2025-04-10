@@ -1,4 +1,4 @@
-import { Game } from "../game";
+import { Game } from '../game';
 
 export class UiController {
   game: Game;
@@ -28,21 +28,21 @@ export class UiController {
     this.gameStartScreen = document.getElementById('game-start');
     this.gameEndScreen = document.getElementById('game-end');
     this.totalMovesElement = document.getElementById('total-moves');
-    
+
     this.upButton = document.getElementById('up-btn');
     this.leftButton = document.getElementById('left-btn');
     this.rightButton = document.getElementById('right-btn');
     this.downButton = document.getElementById('down-btn');
-    
+
     // Обновляем подсказки для кнопок управления кубиком
     if (this.upButton) this.upButton.title = 'Движение к вам (W или ↑)';
     if (this.leftButton) this.leftButton.title = 'Движение влево (A или ←)';
     if (this.rightButton) this.rightButton.title = 'Движение вправо (D или →)';
     if (this.downButton) this.downButton.title = 'Движение от вас (S или ↓)';
-    
+
     // Создаем кнопки для вращения камеры
     this.createCameraControls();
-    
+
     // Создаем элемент для отображения следующей цифры, если его нет
     if (!this.nextNumberElement) {
       this.nextNumberElement = document.createElement('div');
@@ -58,7 +58,7 @@ export class UiController {
       this.nextNumberElement.style.fontSize = '18px';
       document.body.appendChild(this.nextNumberElement);
     }
-    
+
     // Создаем элемент для отображения информации о смене препятствий
     this.obstacleInfoElement = document.createElement('div');
     this.obstacleInfoElement.id = 'obstacle-info';
@@ -72,7 +72,7 @@ export class UiController {
     this.obstacleInfoElement.style.fontWeight = 'bold';
     this.obstacleInfoElement.style.fontSize = '16px';
     document.body.appendChild(this.obstacleInfoElement);
-    
+
     // Создаем элемент для уведомлений
     this.notificationElement = document.createElement('div');
     this.notificationElement.id = 'notification';
@@ -95,12 +95,12 @@ export class UiController {
   init() {
     // Инициализация обработчиков событий
     this.setupEventListeners();
-    
+
     // Показываем стартовый экран
-   // this.showStartScreen();
+    // this.showStartScreen();
 
     // Обновляем счетчики
-  //  this.updateCounters();
+    //  this.updateCounters();
   }
 
   setupEventListeners() {
@@ -111,14 +111,14 @@ export class UiController {
         this.game.cameraController?.rotateLeft();
       });
     }
-    
+
     const rotateRightButton = document.getElementById('rotateRight');
     if (rotateRightButton) {
       rotateRightButton.addEventListener('click', () => {
         this.game.cameraController?.rotateRight();
       });
     }
-    
+
     // Обработчики для кнопок изменения высоты камеры
     const cameraUpButton = document.getElementById('cameraUp');
     if (cameraUpButton) {
@@ -126,7 +126,7 @@ export class UiController {
         this.game.cameraController?.increaseHeight();
       });
     }
-    
+
     const cameraDownButton = document.getElementById('cameraDown');
     if (cameraDownButton) {
       cameraDownButton.addEventListener('click', () => {
@@ -138,7 +138,7 @@ export class UiController {
   updateCounters() {
     // Обновляем информацию о смене препятствий
     if (this.game.state.active) {
-      const movesLeft = 0
+      const movesLeft = 0;
       this.obstacleInfoElement.textContent = `Смена препятствий через: ${movesLeft} ходов`;
       this.obstacleInfoElement.style.display = 'block';
     } else {
@@ -150,12 +150,12 @@ export class UiController {
       this.totalMovesElement.textContent = '0'; //this.movesCounter.toString();
       this.gameEndScreen.classList.remove('hidden');
     }
-    
+
     // Скрываем индикатор следующей цифры на экране победы
     if (this.nextNumberElement) {
       this.nextNumberElement.style.display = 'none';
     }
-    
+
     // Скрываем информацию о смене препятствий на экране победы
     this.obstacleInfoElement.style.display = 'none';
   }
@@ -175,11 +175,11 @@ export class UiController {
     this.notificationElement.textContent = message;
     this.notificationElement.classList.remove('hiding');
     this.notificationElement.style.display = 'block';
-    
+
     // Скрываем уведомление через указанное время
     setTimeout(() => {
       this.notificationElement.classList.add('hiding');
-      
+
       // Полностью скрываем элемент после завершения анимации
       setTimeout(() => {
         this.notificationElement.style.display = 'none';
@@ -194,35 +194,35 @@ export class UiController {
     const buttonsContainer = document.createElement('div');
     buttonsContainer.id = 'cameraControls';
     buttonsContainer.className = 'camera-controls';
-    
+
     // Кнопки вращения камеры
     const rotateLeftButton = document.createElement('button');
     rotateLeftButton.id = 'rotateLeft';
     rotateLeftButton.title = 'Повернуть камеру влево (Q)';
     rotateLeftButton.innerHTML = '&#8634;'; // Символ вращения влево
-    
+
     const rotateRightButton = document.createElement('button');
     rotateRightButton.id = 'rotateRight';
     rotateRightButton.title = 'Повернуть камеру вправо (E)';
     rotateRightButton.innerHTML = '&#8635;'; // Символ вращения вправо
-    
+
     // Кнопки изменения высоты камеры
     const cameraUpButton = document.createElement('button');
     cameraUpButton.id = 'cameraUp';
     cameraUpButton.title = 'Поднять камеру (R)';
     cameraUpButton.innerHTML = '&#8593;'; // Стрелка вверх
-    
+
     const cameraDownButton = document.createElement('button');
     cameraDownButton.id = 'cameraDown';
     cameraDownButton.title = 'Опустить камеру (F)';
     cameraDownButton.innerHTML = '&#8595;'; // Стрелка вниз
-    
+
     // Добавляем кнопки в контейнер
     buttonsContainer.appendChild(rotateLeftButton);
     buttonsContainer.appendChild(rotateRightButton);
     buttonsContainer.appendChild(cameraUpButton);
     buttonsContainer.appendChild(cameraDownButton);
-    
+
     // Добавляем контейнер в DOM
     document.body.appendChild(buttonsContainer);
   }

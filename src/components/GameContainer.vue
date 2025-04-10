@@ -5,30 +5,33 @@
       <div class="game-info">
         <div class="moves-counter">Ходы: {{ moves }}</div>
         <div class="collected-numbers">Собрано: {{ collectedNumbers }}/{{ totalTargetNumbers }}</div>
-        <div class="next-number" v-if="nextNumber <= totalTargetNumbers">
+        <div v-if="nextNumber <= totalTargetNumbers" class="next-number">
           Следующая цель: {{ nextNumber }}
         </div>
-        <div class="obstacle-info" v-if="obstacleInfo">
+        <div v-if="obstacleInfo" class="obstacle-info">
           Смена препятствий через: {{ obstacleInfo }} ходов
         </div>
       </div>
       <div class="mobile-controls">
         <div class="controls-pad">
-          <button @click="$emit('move', 'up')" class="control-btn" title="Движение к вам (W или ↑)">↑</button>
+          <button class="control-btn" title="Движение к вам (W или ↑)" @click="$emit('move', 'up')">↑</button>
           <div class="horizontal-controls">
-            <button @click="$emit('move', 'left')" class="control-btn" title="Движение влево (A или ←)">←</button>
-            <button @click="$emit('move', 'right')" class="control-btn" title="Движение вправо (D или →)">→</button>
+            <button class="control-btn" title="Движение влево (A или ←)" @click="$emit('move', 'left')">←</button>
+            <button class="control-btn" title="Движение вправо (D или →)" @click="$emit('move', 'right')">→</button>
           </div>
-          <button @click="$emit('move', 'down')" class="control-btn" title="Движение от вас (S или ↓)">↓</button>
+          <button class="control-btn" title="Движение от вас (S или ↓)" @click="$emit('move', 'down')">↓</button>
         </div>
       </div>
       <div class="camera-controls">
-        <button @click="$emit('camera-rotate', 'left')" class="camera-btn"
-          title="Повернуть камеру влево (Q)">&#8634;</button>
-        <button @click="$emit('camera-rotate', 'right')" class="camera-btn"
-          title="Повернуть камеру вправо (E)">&#8635;</button>
-        <button @click="$emit('camera-height', 'up')" class="camera-btn" title="Поднять камеру (R)">&#8593;</button>
-        <button @click="$emit('camera-height', 'down')" class="camera-btn" title="Опустить камеру (F)">&#8595;</button>
+        <button
+          class="camera-btn"
+           title="Повернуть камеру влево (Q)"
+          @click="$emit('camera-rotate', 'left')">&#8634;</button>
+        <button
+class="camera-btn" title="Повернуть камеру вправо (E)"
+          @click="$emit('camera-rotate', 'right')">&#8635;</button>
+        <button class="camera-btn" title="Поднять камеру (R)" @click="$emit('camera-height', 'up')">&#8593;</button>
+        <button class="camera-btn" title="Опустить камеру (F)" @click="$emit('camera-height', 'down')">&#8595;</button>
       </div>
     </div>
     <div v-if="notification.show" class="notification" :class="{ hiding: notification.hiding }">
@@ -36,6 +39,7 @@
     </div>
   </div>
 </template>
+
 
 <script lang="ts">
 import { onMounted, onUnmounted, ref, defineComponent } from 'vue'
