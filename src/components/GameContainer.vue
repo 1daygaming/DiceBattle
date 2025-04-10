@@ -28,8 +28,10 @@
            title="Повернуть камеру влево (Q)"
           @click="$emit('camera-rotate', 'left')">&#8634;</button>
         <button
-class="camera-btn" title="Повернуть камеру вправо (E)"
-          @click="$emit('camera-rotate', 'right')">&#8635;</button>
+          class="camera-btn"
+          title="Повернуть камеру вправо (E)"
+          @click="$emit('camera-rotate', 'right')"
+          >&#8635;</button>
         <button class="camera-btn" title="Поднять камеру (R)" @click="$emit('camera-height', 'up')">&#8593;</button>
         <button class="camera-btn" title="Опустить камеру (F)" @click="$emit('camera-height', 'down')">&#8595;</button>
       </div>
