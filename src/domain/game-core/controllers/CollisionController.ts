@@ -11,22 +11,40 @@ export class CollisionController {
   }
 
   public checkCubesCollision(playerCube: CubeController, enemyCubes: CubeController[]): void {
-    for (const enemyCube of enemyCubes) {
-      if (this.areCubesColliding(playerCube, enemyCube)) {
-        this.handleCollision(playerCube, enemyCube, enemyCubes);
-        break;
+    const allCubes = [playerCube, ...enemyCubes];
+    const processedPairs = new Set<string>();
+
+    for (let i = 0; i < allCubes.length; i++) {
+      for (let j = i + 1; j < allCubes.length; j++) {
+        const cube1 = allCubes[i];
+        const cube2 = allCubes[j];
+        
+        if (cube1.teleporting || cube2.teleporting) continue;
+        
+        const pairKey = `${i}-${j}`;
+        if (processedPairs.has(pairKey)) continue;
+        
+        if (this.areCubesColliding(cube1, cube2)) {
+          if (cube1 === playerCube || cube2 === playerCube) {
+            const enemy = cube1 === playerCube ? cube2 : cube1;
+            this.handleCollision(playerCube, enemy, enemyCubes);
+          } else {
+            this.handleEnemyCollision(cube1, cube2, enemyCubes);
+          }
+          processedPairs.add(pairKey);
+        }
       }
     }
   }
 
-  private areCubesColliding(playerCube: CubeController, enemyCube: CubeController): boolean {
-    const playerPos = playerCube.position;
-    const enemyPos = enemyCube.position;
+  private areCubesColliding(cube1: CubeController, cube2: CubeController): boolean {
+    const pos1 = cube1.position;
+    const pos2 = cube2.position;
 
-    const isSameCell = playerPos.x === enemyPos.x && playerPos.y === enemyPos.y;
+    const isSameCell = pos1.x === pos2.x && pos1.y === pos2.y;
     const isAdjacent = 
-      (Math.abs(playerPos.x - enemyPos.x) === 1 && playerPos.y === enemyPos.y) ||
-      (Math.abs(playerPos.y - enemyPos.y) === 1 && playerPos.x === enemyPos.x);
+      (Math.abs(pos1.x - pos2.x) === 1 && pos1.y === pos2.y) ||
+      (Math.abs(pos1.y - pos2.y) === 1 && pos1.x === pos2.x);
 
     return isSameCell || isAdjacent;
   }
@@ -50,11 +68,71 @@ export class CollisionController {
     }
   }
 
-  private logCollisionDetails(playerCube: CubeController, enemyCube: CubeController): void {
+  private handleEnemyCollision(
+    enemy1: CubeController,
+    enemy2: CubeController,
+    allEnemies: CubeController[]
+  ): void {
+    this.logCollisionDetails(enemy1, enemy2);
+
+    const value1 = enemy1.getTopValue();
+    const value2 = enemy2.getTopValue();
+
+    if (value1 > value2) {
+      this.handleEnemyWinBattle(enemy2, enemy1, allEnemies);
+    } else if (value2 > value1) {
+      this.handleEnemyWinBattle(enemy1, enemy2, allEnemies);
+    } else {
+      this.handleEnemyDraw(enemy1, enemy2, allEnemies);
+    }
+  }
+
+  private handleEnemyWinBattle(
+    loser: CubeController,
+    winner: CubeController,
+    allEnemies: CubeController[]
+  ): void {
+    console.log('Enemy battle! Winner:', winner === loser ? 'Draw' : 'Enemy');
+    const otherPositions = allEnemies
+      .filter(cube => cube !== winner && cube !== loser)
+      .map(cube => cube.position);
+    
+    this.teleportCube(loser, [...otherPositions, winner.position]);
+  }
+
+  private handleEnemyDraw(
+    enemy1: CubeController,
+    enemy2: CubeController,
+    allEnemies: CubeController[]
+  ): void {
+    console.log('Enemy battle draw!');
+    if (enemy1.position.x === enemy2.position.x && 
+        enemy1.position.y === enemy2.position.y) {
+      this.teleportBothEnemies(enemy1, enemy2, allEnemies);
+    }
+  }
+
+  private teleportBothEnemies(
+    enemy1: CubeController,
+    enemy2: CubeController,
+    allEnemies: CubeController[]
+  ): void {
+    const otherPositions = allEnemies
+      .filter(cube => cube !== enemy1 && cube !== enemy2)
+      .map(cube => cube.position);
+
+    const newPos1 = this.findRandomFreePosition(otherPositions);
+    this.teleportController.animateTeleport(enemy1, newPos1);
+
+    const newPos2 = this.findRandomFreePosition([...otherPositions, newPos1]);
+    this.teleportController.animateTeleport(enemy2, newPos2);
+  }
+
+  private logCollisionDetails(cube1: CubeController, cube2: CubeController): void {
     console.log('Cubes collided! Starting battle!');
-    console.log('Player face values:', playerCube.faceValues);
-    console.log('Enemy face values:', enemyCube.faceValues);
-    console.log(`Player value: ${playerCube.getTopValue()}, Enemy value: ${enemyCube.getTopValue()}`);
+    console.log('Cube1 face values:', cube1.faceValues);
+    console.log('Cube2 face values:', cube2.faceValues);
+    console.log(`Cube1 value: ${cube1.getTopValue()}, Cube2 value: ${cube2.getTopValue()}`);
   }
 
   private handlePlayerWin(

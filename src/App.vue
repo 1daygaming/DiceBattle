@@ -56,21 +56,17 @@ export default defineComponent({
       console.log('call mount')
       game = new Game();
 
-      // Создаем экземпляр UI
       new UiController(game);
 
-      // Устанавливаем обработчик изменения количества собранных цифр
       game.setCollectedNumbersChangedHandler((count: number) => {
         collectedNumbers.value = count;
         nextNumber.value = count + 1;
       });
 
-      // Устанавливаем обработчик завершения игры
       game.setGameCompletedHandler(() => {
         gameEnded.value = true;
       });
 
-      // Устанавливаем обработчик для проверки очереди ходов
       game.setRotationCompletedHandler(() => {
         if (moveQueue.value.length > 0) {
           const nextDirection = moveQueue.value.shift()
@@ -83,10 +79,8 @@ export default defineComponent({
         }
       });
 
-      // Инициализируем игру
       game.init();
 
-      // Запускаем игровой цикл
       game.animate();
     })
 
@@ -112,10 +106,10 @@ export default defineComponent({
     const handleMove = (direction: Direction): void => {
       if (game && game.state.active) {
         if (game.isCubeRotating()) {
-          // If cube is rotating or teleporting, add move to queue
-          moveQueue.value.push(direction)
+          if (game.isMovePossible(direction)) {
+            moveQueue.value.push(direction)
+          }
         } else {
-          // If cube is not rotating, execute the move immediately
           const moved = game.moveCube(direction)
           if (moved) {
             movesCounter.value++

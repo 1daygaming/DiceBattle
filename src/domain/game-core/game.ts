@@ -24,6 +24,8 @@ export class Game {
   private rotationCompletedHandler: (() => void) | null = null;
   private onCollectedNumbersChanged: ((count: number) => void) | null = null;
   private onGameCompleted: (() => void) | null = null;
+  private lastAiMoveTime: number = 0;
+  private aiMoveInterval: number = 1000; // AI moves every 1 second
 
   constructor(config: GameConfig = { boardSize: { width: 10, height: 10 }, cellSize: 1 }) {
     this.config = {
@@ -177,6 +179,7 @@ export class Game {
 
   private setupEventListeners(): void {
     window.addEventListener('resize', () => this.onWindowResize());
+    this.lastAiMoveTime = performance.now();
   }
 
   private onWindowResize(): void {
@@ -287,6 +290,13 @@ export class Game {
         enemyRotationsCompleted.every(completed => completed !== false) &&
         this.enemyCubes.every(enemyCube => !enemyCube.teleporting);
 
+      // Check if it's time for AI to move
+      const currentTime = performance.now();
+      if (currentTime - this.lastAiMoveTime >= this.aiMoveInterval) {
+        this.makeAiMove();
+        this.lastAiMoveTime = currentTime;
+      }
+
       if (
         playerRotationCompleted &&
         !this.currentUserCubeController.teleporting &&
@@ -320,44 +330,18 @@ export class Game {
     this.renderer.render(this.scene, this.camera);
   }
 
-  public moveCube(direction: Direction): boolean {
-    if (
-      !this.state.active ||
-      !this.currentUserCubeController ||
-      !this.cameraController ||
-      !this.aiController
-    )
-      return false;
-
-    if (
-      this.currentUserCubeController.rotationInProgress ||
-      this.enemyCubes.some(enemyCube => enemyCube.rotationInProgress) ||
-      this.currentUserCubeController.teleporting ||
-      this.enemyCubes.some(enemyCube => enemyCube.teleporting)
-    )
-      return false;
-
-    const transformedDirection = this.cameraController.transformDirectionByCamera(direction);
-
-    if (
-      !this.currentUserCubeController.canRotate(
-        transformedDirection,
-        this.config.boardSize,
-        this.config.cellSize,
-        this.boardController
-      )
-    ) {
-      return false;
-    }
-
-    this.currentUserCubeController.startRotation(
-      transformedDirection,
-      this.config.boardSize,
-      this.config.cellSize,
-      this.boardController
-    );
+  private makeAiMove(): void {
+    if (!this.state.active || !this.cameraController || !this.aiController || !this.currentUserCubeController || !this.collisionController) return;
 
     for (const enemyCube of this.enemyCubes) {
+      if (
+        enemyCube.rotationInProgress ||
+        enemyCube.teleporting ||
+        this.currentUserCubeController.teleporting
+      ) {
+        continue;
+      }
+
       const enemyDirection = this.aiController.getAiMoveDirection(
         enemyCube,
         this.currentUserCubeController,
@@ -382,9 +366,46 @@ export class Game {
             this.config.cellSize,
             this.boardController
           );
+
+          this.collisionController.checkCubesCollision(this.currentUserCubeController, this.enemyCubes);
         }
       }
     }
+  }
+
+  public moveCube(direction: Direction): boolean {
+    if (
+      !this.state.active ||
+      !this.currentUserCubeController ||
+      !this.cameraController
+    )
+      return false;
+
+    if (
+      this.currentUserCubeController.rotationInProgress ||
+      this.currentUserCubeController.teleporting
+    )
+      return false;
+
+    const transformedDirection = this.cameraController.transformDirectionByCamera(direction);
+
+    if (
+      !this.currentUserCubeController.canRotate(
+        transformedDirection,
+        this.config.boardSize,
+        this.config.cellSize,
+        this.boardController
+      )
+    ) {
+      return false;
+    }
+
+    this.currentUserCubeController.startRotation(
+      transformedDirection,
+      this.config.boardSize,
+      this.config.cellSize,
+      this.boardController
+    );
 
     this.state.moveCount++;
 
@@ -473,5 +494,17 @@ export class Game {
 
   setGameCompletedHandler(handler: () => void): void {
     this.onGameCompleted = handler;
+  }
+
+  public isMovePossible(direction: Direction): boolean {
+    if (!this.state.active || !this.cameraController || !this.currentUserCubeController) return false;
+
+    const transformedDirection = this.cameraController.transformDirectionByCamera(direction);
+    return this.currentUserCubeController.canRotate(
+      transformedDirection,
+      this.config.boardSize,
+      this.config.cellSize,
+      this.boardController
+    );
   }
 }
