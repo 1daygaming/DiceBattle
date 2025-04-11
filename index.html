@@ -1,64 +1,12 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Stacker - Головоломка с кубиком</title>
-  <link rel="stylesheet" href="/src/css/style.css">
-  <script>
-    // Предотвращение масштабирования при двойном тапе
-    document.addEventListener('touchstart', function(event) {
-      if (event.touches.length > 1) {
-        event.preventDefault();
-      }
-    }, { passive: false });
-    
-    // Предотвращение масштабирования при жесте pinch-to-zoom
-    document.addEventListener('touchmove', function(event) {
-      if (event.touches.length > 1) {
-        event.preventDefault();
-      }
-    }, { passive: false });
-    
-    // Предотвращение масштабирования при двойном тапе
-    let lastTouchEnd = 0;
-    document.addEventListener('touchend', function(event) {
-      const now = (new Date()).getTime();
-      if (now - lastTouchEnd <= 300) {
-        event.preventDefault();
-      }
-      lastTouchEnd = now;
-    }, { passive: false });
-  </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Stacker - Головоломка с кубиком</title>
 </head>
 <body>
-  <div id="game-container">
-    <div id="game-canvas"></div>
-    <div id="ui-container">
-      <div id="game-info">
-        <div id="moves-counter">Ходы: 0</div>
-        <div id="collected-numbers">Собрано: 0/6</div>
-      </div>
-      <div id="mobile-controls">
-        <div id="controls-pad">
-          <button id="up-btn" class="control-btn">↑</button>
-          <button id="left-btn" class="control-btn">←</button>
-          <button id="right-btn" class="control-btn">→</button>
-          <button id="down-btn" class="control-btn">↓</button>
-        </div>
-      </div>
-    </div>
-    <div id="game-start" class="game-screen">
-      <h1>Stacker</h1>
-      <p>Перекатывайте кубик и собирайте цифры от 1 до 6 в правильном порядке!</p>
-      <button id="start-btn">Начать игру</button>
-    </div>
-    <div id="game-end" class="game-screen hidden">
-      <h1>Победа!</h1>
-      <p>Вы собрали все цифры за <span id="total-moves">0</span> ходов!</p>
-      <button id="restart-btn">Играть снова</button>
-    </div>
-  </div>
-  <script type="module" src="/src/js/main.js"></script>
+<div id="app"></div>
+<script type="module" src="/src/main.ts"></script>
 </body>
-</html> 
+</html>
