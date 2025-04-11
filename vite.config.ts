@@ -25,6 +25,11 @@ export default defineConfig({
   },
   server: {
     host: true,
-    open: true,
+    port: 5173,
+    strictPort: true,
+    hmr: {
+      host: 'rnkfn-5-44-168-93.a.free.pinggy.link',
+      protocol: 'ws',
+    },
   },
 });
